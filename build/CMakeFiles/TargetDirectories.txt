@@ -1,0 +1,3 @@
+/home/niktit/Projects/New_RayTracer/build/CMakeFiles/rtx.dir
+/home/niktit/Projects/New_RayTracer/build/CMakeFiles/edit_cache.dir
+/home/niktit/Projects/New_RayTracer/build/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/rtx.dir/link.d CMakeFiles/rtx.dir/main.cpp.o CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o -o rtx  -lsfml-graphics -lsfml-window -lsfml-system -ldl

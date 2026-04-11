@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/RTX.dir/link.d CMakeFiles/RTX.dir/main.cpp.o -o RTX  /usr/lib/libsfml-graphics.so.3.0.2 /usr/lib/libsfml-window.so.3.0.2 /usr/lib/libsfml-system.so.3.0.2

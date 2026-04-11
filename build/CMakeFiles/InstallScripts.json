@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/niktit/Projects/New_RayTracer/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
