@@ -3,6 +3,10 @@ rtx: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crti.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o \
   CMakeFiles/rtx.dir/main.cpp.o \
+  CMakeFiles/rtx.dir/models.cpp.o \
+  CMakeFiles/rtx.dir/base.cpp.o \
+  CMakeFiles/rtx.dir/movement.cpp.o \
+  CMakeFiles/rtx.dir/graphics.cpp.o \
   CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libsfml-graphics.so \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/libsfml-window.so \
@@ -73,6 +77,14 @@ rtx: \
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/crtbeginS.o:
 
 CMakeFiles/rtx.dir/main.cpp.o:
+
+CMakeFiles/rtx.dir/models.cpp.o:
+
+CMakeFiles/rtx.dir/base.cpp.o:
+
+CMakeFiles/rtx.dir/movement.cpp.o:
+
+CMakeFiles/rtx.dir/graphics.cpp.o:
 
 CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o:
 

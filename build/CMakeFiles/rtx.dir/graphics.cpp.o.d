@@ -1,5 +1,7 @@
-CMakeFiles/rtx.dir/main.cpp.o: \
- /home/niktit/Projects/New_RayTracer/main.cpp /usr/include/stdc-predef.h \
+CMakeFiles/rtx.dir/graphics.cpp.o: \
+ /home/niktit/Projects/New_RayTracer/graphics.cpp \
+ /usr/include/stdc-predef.h \
+ /home/niktit/Projects/New_RayTracer/graphics.h \
  /home/niktit/Projects/New_RayTracer/base.h \
  /home/niktit/Projects/New_RayTracer/third_party/glad/include/glad/gl.h \
  /home/niktit/Projects/New_RayTracer/third_party/glad/include/KHR/khrplatform.h \
@@ -286,7 +288,4 @@ CMakeFiles/rtx.dir/main.cpp.o: \
  /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/opt_random.h \
  /usr/include/c++/15.2.1/bits/random.tcc /usr/include/c++/15.2.1/numeric \
  /usr/include/c++/15.2.1/bits/stl_numeric.h \
- /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
- /home/niktit/Projects/New_RayTracer/graphics.h \
- /home/niktit/Projects/New_RayTracer/models.h \
- /home/niktit/Projects/New_RayTracer/movement.h
+ /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h

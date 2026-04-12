@@ -85,12 +85,12 @@ clean: CMakeFiles/rtx.dir/clean
 CMakeFiles/rtx.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=1,2,3 "Built target rtx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=1,2,3,4,5,6,7 "Built target rtx"
 .PHONY : CMakeFiles/rtx.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/rtx.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/niktit/Projects/New_RayTracer/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/niktit/Projects/New_RayTracer/build/CMakeFiles 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/rtx.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/niktit/Projects/New_RayTracer/build/CMakeFiles 0
 .PHONY : CMakeFiles/rtx.dir/rule
@@ -102,7 +102,7 @@ rtx: CMakeFiles/rtx.dir/rule
 # codegen rule for target.
 CMakeFiles/rtx.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=1,2,3 "Finished codegen for target rtx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=1,2,3,4,5,6,7 "Finished codegen for target rtx"
 .PHONY : CMakeFiles/rtx.dir/codegen
 
 # clean rule for target.

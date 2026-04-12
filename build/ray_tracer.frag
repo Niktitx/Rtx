@@ -1,11 +1,14 @@
 #version 330 core
 
 uniform vec2 u_resolution;
-uniform vec3 CameraPos;
-uniform vec3 CameraRot;
+uniform vec3 u_cameraPos;
+uniform vec3 u_camFront;
+uniform vec3 u_camRight;
+uniform vec3 u_camUp;
 uniform int u_frame;
 uniform int u_seed;
 uniform sampler2D accumTexture;
+uniform int simpleMode;
 
 uniform sampler2D u_modelData;
 uniform int u_numTriangles;
@@ -43,9 +46,8 @@ vec3 random_in_unit_sphere() {
 }
 
 vec3 fetchModelData(int index) {
-  int texWidth = 1024;
-  int x = index % texWidth;
-  int y = index / texWidth;
+  int x = index & 1023;
+  int y = index >> 10;
   return texelFetch(u_modelData, ivec2(x, y), 0).rgb;
 }
 
@@ -69,7 +71,7 @@ void set_face_normal(ray r, vec3 otwards_normal, inout hit_record rec) {
 }
 
 struct material {
-  int ID; // 0 - sharp, 1 - metal
+  int ID; // 0 - matte, 1 - metal
   vec3 albedo;
   vec4 emission;
 };
@@ -82,7 +84,7 @@ struct sphere {
 
 const sphere spheres[1] = sphere[](
     // sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0))),
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.5)))
+    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.25)))
   // sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.8, 0.3), vec4(0))),
   // sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0))),
   // sphere(vec3(0.0, -200.6, -1.0), 200.0, material(0, vec3(0.4, 0.4, 0.0), vec4(0.0)))
@@ -139,12 +141,17 @@ bool hit_triangle(ray r, int i, vec2 ray_t, out hit_record rec) { //ray_t.x is m
 }
 
 bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
+  if (simpleMode == 1) {
+    return false;
+  }
   if (!hit_aabb(r, u_aabbMin, u_aabbMax, ray_t)) {
     return false;
   }
 
   bool hit_anything = false;
   float closest = ray_t.y;
+  int closest_base_index = -1;
+
   hit_record temp_rec;
 
   for (int i = 0; i < u_numTriangles; i++) {
@@ -153,39 +160,42 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
     vec3 posA = fetchModelData(baseIndex + 0);
     vec3 edgeAB = fetchModelData(baseIndex + 1);
     vec3 edgeAC = fetchModelData(baseIndex + 2);
-    vec3 normal = fetchModelData(baseIndex + 3);
-    vec3 color = fetchModelData(baseIndex + 4);
 
-    // --- Стандартный алгоритм пересечения (Möller-Trumbore) ---
-    float determinant = -dot(r.direction, normal);
+    vec3 pvec = cross(r.direction, edgeAC);
+
+    float determinant = dot(edgeAB, pvec);
     if (abs(determinant) < 1e-6) continue;
 
     float invDet = 1.0 / determinant;
     vec3 ao = r.origin - posA;
-    vec3 dao = cross(ao, r.direction);
 
-    float u = dot(edgeAC, dao) * invDet;
+    float u = dot(ao, pvec) * invDet;
     if (u < 0.0 || u > 1.0) continue;
 
-    float v = -dot(edgeAB, dao) * invDet;
-    if (v < 0.0 || u + v > 1.0) continue;
+    vec3 dao = cross(ao, edgeAB);
 
-    float dist = dot(ao, normal) * invDet;
+    float v = dot(r.direction, dao) * invDet;
+    if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
 
-    // --- Проверка дистанции ---
+    float dist = dot(edgeAC, dao) * invDet;
+
     if (dist > ray_t.x && dist < closest) {
       closest = dist;
+      closest_base_index = baseIndex;
       hit_anything = true;
-
-      // Сохраняем данные успешного попадания
-      rec.t = dist;
-      rec.p = r.origin + r.direction * dist;
-      rec.normal = normalize((determinant > 0.0) ? normal : -normal);
-      rec.albedo = color;
-      rec.materialId = 0; // Матовый
-      rec.emission = vec4(0.0);
     }
   }
+  vec3 normal = fetchModelData(closest_base_index + 3);
+  vec3 color = fetchModelData(closest_base_index + 4);
+
+  float determinant = -dot(r.direction, normal);
+
+  rec.t = closest;
+  rec.p = r.origin + r.direction * closest;
+  rec.normal = normalize((determinant > 0.0) ? normal : -normal);
+  rec.albedo = color;
+  rec.materialId = 0;
+  rec.emission = vec4(0.0);
 
   return hit_anything;
 }
@@ -222,13 +232,13 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
   bool hit_anything = false;
   float closest = ray_t.y;
 
-  // for (int i = 0; i < spheres.length(); i++) {
-  //   if (hit_sphere(r, spheres[i], vec2(ray_t.x, closest), temp_rec)) {
-  //     hit_anything = true;
-  //     closest = temp_rec.t;
-  //     rec = temp_rec;
-  //   }
-  // }
+  for (int i = 0; i < spheres.length(); i++) {
+    if (hit_sphere(r, spheres[i], vec2(ray_t.x, closest), temp_rec)) {
+      hit_anything = true;
+      closest = temp_rec.t;
+      rec = temp_rec;
+    }
+  }
 
   for (int i = 0; i < u_triNormal.length(); i++) {
     if (hit_triangle(r, i, vec2(ray_t.x, closest), temp_rec)) {
@@ -237,6 +247,7 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
       rec = temp_rec;
     }
   }
+
   if (u_numTriangles > 0) {
     if (hit_3d_model(r, vec2(ray_t.x, closest), temp_rec)) {
       hit_anything = true;
@@ -253,7 +264,7 @@ vec4 sun = vec4(-500, 400, -300, 100);
 vec3 ray_color(ray r) {
   vec3 color = vec3(1.0);
   vec3 incoming_light = vec3(0);
-  int MAX_BOUNCES = 10;
+  int MAX_BOUNCES = 5;
   for (int i = 0; i < MAX_BOUNCES; i++) {
     hit_record rec;
     if (hit_world(r, vec2(0.001, 10000), rec)) {
@@ -267,17 +278,19 @@ vec3 ray_color(ray r) {
           float NdotL = max(dot(rec.normal, shadow_ray.direction), 0.0);
           incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.albedo * NdotL * color;
         }
-        vec3 scatter_direction = normalize(rec.normal + random_in_unit_sphere());
+        vec3 scatter_direction = rec.normal + random_in_unit_sphere();
+        if (scatter_direction.x * scatter_direction.x + scatter_direction.y * scatter_direction.y + scatter_direction.z * scatter_direction.z < 1e-6)
+          scatter_direction = rec.normal;
         r = ray(rec.p, normalize(scatter_direction));
       } else if (rec.materialId == 1) {
-        vec3 reflected = reflect(normalize(r.direction), rec.normal);
+        vec3 reflected = reflect(r.direction, rec.normal);
         r = ray(rec.p, reflected);
       }
       incoming_light += rec.emission.xyz * rec.emission.w * color;
       color *= rec.albedo;
     }
     else {
-      vec3 unit_direction = normalize(r.direction);
+      vec3 unit_direction = r.direction;
       float a = 0.5 * (unit_direction.y + 1.0);
       incoming_light += 0.5 * color * ((1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0));
       break;
@@ -293,32 +306,28 @@ void main()
       uint(u_frame) * 26699u;
   float aspect_ratio = u_resolution.x / u_resolution.y;
 
-  vec3 origin = CameraPos;
-  vec3 horizontal = vec3(2.0 * aspect_ratio, 0.0, 0.0);
-  vec3 vertical = vec3(0.0, 2.0, 0.0);
+  vec3 origin = u_cameraPos;
 
-  float fov = 3.142592 / 2;
-  float flocal_length = horizontal.x / 2 / tan(fov / 2);
-
-  vec3 lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - vec3(0.0, 0.0, flocal_length);
+  float fov = radians(90.0f);
+  float flocal_length = 1.0 / tan(fov / 2.0);
 
   int SAMPLES_PER_PIXEL = 1;
   vec3 pixel_color = vec3(0.0);
 
   for (int s = 0; s < SAMPLES_PER_PIXEL; s++) {
-    float u = (gl_FragCoord.x - 0.5 + random()) / u_resolution.x;
-    float v = (gl_FragCoord.y - 0.5 + random()) / u_resolution.y;
-    vec3 temp_dir = normalize(lower_left_corner + u * horizontal + v * vertical - origin);
-    vec3 direction = vec3(temp_dir.x * cos(CameraRot.y) - temp_dir.z * sin(CameraRot.y), temp_dir.y, temp_dir.x * sin(CameraRot.y) + temp_dir.z * cos(CameraRot.y));
+    float u = ((gl_FragCoord.x - 0.5 + random()) / u_resolution.x) * 2.0 - 1.0;
+    float v = ((gl_FragCoord.y - 0.5 + random()) / u_resolution.y) * 2.0 - 1.0;
+
+    u *= aspect_ratio;
+
+    vec3 direction = normalize(u * u_camRight + v * u_camUp + flocal_length * u_camFront);
+
     ray r = ray(origin, direction);
     pixel_color += ray_color(r);
   }
 
   pixel_color /= float(SAMPLES_PER_PIXEL);
   vec3 prevColor = texture(accumTexture, uv).rgb;
-
-  // float weight = 1.0 / min(float(u_frame + 1), 200.0); // Никогда не усредняем больше чем 1/200
-  //vec3 finalColor = mix(prevColor, pixel_color, weight);
 
   vec3 finalColor = (prevColor * float(u_frame) + pixel_color) / float(u_frame + 1);
   FragColor = vec4((finalColor), 1.0);

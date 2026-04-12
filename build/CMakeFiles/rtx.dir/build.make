@@ -86,10 +86,66 @@ CMakeFiles/rtx.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/rtx.dir/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/niktit/Projects/New_RayTracer/main.cpp -o CMakeFiles/rtx.dir/main.cpp.s
 
+CMakeFiles/rtx.dir/models.cpp.o: CMakeFiles/rtx.dir/flags.make
+CMakeFiles/rtx.dir/models.cpp.o: /home/niktit/Projects/New_RayTracer/models.cpp
+CMakeFiles/rtx.dir/models.cpp.o: CMakeFiles/rtx.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/rtx.dir/models.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rtx.dir/models.cpp.o -MF CMakeFiles/rtx.dir/models.cpp.o.d -o CMakeFiles/rtx.dir/models.cpp.o -c /home/niktit/Projects/New_RayTracer/models.cpp
+
+CMakeFiles/rtx.dir/models.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/rtx.dir/models.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/niktit/Projects/New_RayTracer/models.cpp > CMakeFiles/rtx.dir/models.cpp.i
+
+CMakeFiles/rtx.dir/models.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/rtx.dir/models.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/niktit/Projects/New_RayTracer/models.cpp -o CMakeFiles/rtx.dir/models.cpp.s
+
+CMakeFiles/rtx.dir/base.cpp.o: CMakeFiles/rtx.dir/flags.make
+CMakeFiles/rtx.dir/base.cpp.o: /home/niktit/Projects/New_RayTracer/base.cpp
+CMakeFiles/rtx.dir/base.cpp.o: CMakeFiles/rtx.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/rtx.dir/base.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rtx.dir/base.cpp.o -MF CMakeFiles/rtx.dir/base.cpp.o.d -o CMakeFiles/rtx.dir/base.cpp.o -c /home/niktit/Projects/New_RayTracer/base.cpp
+
+CMakeFiles/rtx.dir/base.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/rtx.dir/base.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/niktit/Projects/New_RayTracer/base.cpp > CMakeFiles/rtx.dir/base.cpp.i
+
+CMakeFiles/rtx.dir/base.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/rtx.dir/base.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/niktit/Projects/New_RayTracer/base.cpp -o CMakeFiles/rtx.dir/base.cpp.s
+
+CMakeFiles/rtx.dir/movement.cpp.o: CMakeFiles/rtx.dir/flags.make
+CMakeFiles/rtx.dir/movement.cpp.o: /home/niktit/Projects/New_RayTracer/movement.cpp
+CMakeFiles/rtx.dir/movement.cpp.o: CMakeFiles/rtx.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/rtx.dir/movement.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rtx.dir/movement.cpp.o -MF CMakeFiles/rtx.dir/movement.cpp.o.d -o CMakeFiles/rtx.dir/movement.cpp.o -c /home/niktit/Projects/New_RayTracer/movement.cpp
+
+CMakeFiles/rtx.dir/movement.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/rtx.dir/movement.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/niktit/Projects/New_RayTracer/movement.cpp > CMakeFiles/rtx.dir/movement.cpp.i
+
+CMakeFiles/rtx.dir/movement.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/rtx.dir/movement.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/niktit/Projects/New_RayTracer/movement.cpp -o CMakeFiles/rtx.dir/movement.cpp.s
+
+CMakeFiles/rtx.dir/graphics.cpp.o: CMakeFiles/rtx.dir/flags.make
+CMakeFiles/rtx.dir/graphics.cpp.o: /home/niktit/Projects/New_RayTracer/graphics.cpp
+CMakeFiles/rtx.dir/graphics.cpp.o: CMakeFiles/rtx.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/rtx.dir/graphics.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/rtx.dir/graphics.cpp.o -MF CMakeFiles/rtx.dir/graphics.cpp.o.d -o CMakeFiles/rtx.dir/graphics.cpp.o -c /home/niktit/Projects/New_RayTracer/graphics.cpp
+
+CMakeFiles/rtx.dir/graphics.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/rtx.dir/graphics.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/niktit/Projects/New_RayTracer/graphics.cpp > CMakeFiles/rtx.dir/graphics.cpp.i
+
+CMakeFiles/rtx.dir/graphics.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/rtx.dir/graphics.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/niktit/Projects/New_RayTracer/graphics.cpp -o CMakeFiles/rtx.dir/graphics.cpp.s
+
 CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o: CMakeFiles/rtx.dir/flags.make
 CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o: /home/niktit/Projects/New_RayTracer/third_party/glad/src/gl.c
 CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o: CMakeFiles/rtx.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building C object CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o -MF CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o.d -o CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o -c /home/niktit/Projects/New_RayTracer/third_party/glad/src/gl.c
 
 CMakeFiles/rtx.dir/third_party/glad/src/gl.c.i: cmake_force
@@ -103,17 +159,25 @@ CMakeFiles/rtx.dir/third_party/glad/src/gl.c.s: cmake_force
 # Object files for target rtx
 rtx_OBJECTS = \
 "CMakeFiles/rtx.dir/main.cpp.o" \
+"CMakeFiles/rtx.dir/models.cpp.o" \
+"CMakeFiles/rtx.dir/base.cpp.o" \
+"CMakeFiles/rtx.dir/movement.cpp.o" \
+"CMakeFiles/rtx.dir/graphics.cpp.o" \
 "CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o"
 
 # External object files for target rtx
 rtx_EXTERNAL_OBJECTS =
 
 rtx: CMakeFiles/rtx.dir/main.cpp.o
+rtx: CMakeFiles/rtx.dir/models.cpp.o
+rtx: CMakeFiles/rtx.dir/base.cpp.o
+rtx: CMakeFiles/rtx.dir/movement.cpp.o
+rtx: CMakeFiles/rtx.dir/graphics.cpp.o
 rtx: CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o
 rtx: CMakeFiles/rtx.dir/build.make
 rtx: CMakeFiles/rtx.dir/compiler_depend.ts
 rtx: CMakeFiles/rtx.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable rtx"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/niktit/Projects/New_RayTracer/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable rtx"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/rtx.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

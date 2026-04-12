@@ -129,6 +129,54 @@ rtx/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/build
 .PHONY : rtx/fast
 
+base.o: base.cpp.o
+.PHONY : base.o
+
+# target to build an object file
+base.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/base.cpp.o
+.PHONY : base.cpp.o
+
+base.i: base.cpp.i
+.PHONY : base.i
+
+# target to preprocess a source file
+base.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/base.cpp.i
+.PHONY : base.cpp.i
+
+base.s: base.cpp.s
+.PHONY : base.s
+
+# target to generate assembly for a file
+base.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/base.cpp.s
+.PHONY : base.cpp.s
+
+graphics.o: graphics.cpp.o
+.PHONY : graphics.o
+
+# target to build an object file
+graphics.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/graphics.cpp.o
+.PHONY : graphics.cpp.o
+
+graphics.i: graphics.cpp.i
+.PHONY : graphics.i
+
+# target to preprocess a source file
+graphics.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/graphics.cpp.i
+.PHONY : graphics.cpp.i
+
+graphics.s: graphics.cpp.s
+.PHONY : graphics.s
+
+# target to generate assembly for a file
+graphics.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/graphics.cpp.s
+.PHONY : graphics.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -152,6 +200,54 @@ main.s: main.cpp.s
 main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/main.cpp.s
 .PHONY : main.cpp.s
+
+models.o: models.cpp.o
+.PHONY : models.o
+
+# target to build an object file
+models.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/models.cpp.o
+.PHONY : models.cpp.o
+
+models.i: models.cpp.i
+.PHONY : models.i
+
+# target to preprocess a source file
+models.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/models.cpp.i
+.PHONY : models.cpp.i
+
+models.s: models.cpp.s
+.PHONY : models.s
+
+# target to generate assembly for a file
+models.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/models.cpp.s
+.PHONY : models.cpp.s
+
+movement.o: movement.cpp.o
+.PHONY : movement.o
+
+# target to build an object file
+movement.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/movement.cpp.o
+.PHONY : movement.cpp.o
+
+movement.i: movement.cpp.i
+.PHONY : movement.i
+
+# target to preprocess a source file
+movement.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/movement.cpp.i
+.PHONY : movement.cpp.i
+
+movement.s: movement.cpp.s
+.PHONY : movement.s
+
+# target to generate assembly for a file
+movement.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rtx.dir/build.make CMakeFiles/rtx.dir/movement.cpp.s
+.PHONY : movement.cpp.s
 
 third_party/glad/src/gl.o: third_party/glad/src/gl.c.o
 .PHONY : third_party/glad/src/gl.o
@@ -186,9 +282,21 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... rtx"
+	@echo "... base.o"
+	@echo "... base.i"
+	@echo "... base.s"
+	@echo "... graphics.o"
+	@echo "... graphics.i"
+	@echo "... graphics.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... models.o"
+	@echo "... models.i"
+	@echo "... models.s"
+	@echo "... movement.o"
+	@echo "... movement.i"
+	@echo "... movement.s"
 	@echo "... third_party/glad/src/gl.o"
 	@echo "... third_party/glad/src/gl.i"
 	@echo "... third_party/glad/src/gl.s"

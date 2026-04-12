@@ -1,5 +1,6 @@
-CMakeFiles/rtx.dir/main.cpp.o: \
- /home/niktit/Projects/New_RayTracer/main.cpp /usr/include/stdc-predef.h \
+CMakeFiles/rtx.dir/models.cpp.o: \
+ /home/niktit/Projects/New_RayTracer/models.cpp \
+ /usr/include/stdc-predef.h /home/niktit/Projects/New_RayTracer/models.h \
  /home/niktit/Projects/New_RayTracer/base.h \
  /home/niktit/Projects/New_RayTracer/third_party/glad/include/glad/gl.h \
  /home/niktit/Projects/New_RayTracer/third_party/glad/include/KHR/khrplatform.h \
@@ -288,5 +289,14 @@ CMakeFiles/rtx.dir/main.cpp.o: \
  /usr/include/c++/15.2.1/bits/stl_numeric.h \
  /usr/include/c++/15.2.1/pstl/glue_numeric_defs.h \
  /home/niktit/Projects/New_RayTracer/graphics.h \
- /home/niktit/Projects/New_RayTracer/models.h \
- /home/niktit/Projects/New_RayTracer/movement.h
+ /usr/include/tiny_obj_loader.h /usr/include/c++/15.2.1/map \
+ /usr/include/c++/15.2.1/bits/stl_tree.h \
+ /usr/include/c++/15.2.1/bits/stl_map.h \
+ /usr/include/c++/15.2.1/bits/stl_multimap.h \
+ /usr/include/c++/15.2.1/cstring /usr/include/string.h \
+ /usr/include/strings.h /usr/include/c++/15.2.1/fstream \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/basic_file.h \
+ /usr/include/c++/15.2.1/x86_64-pc-linux-gnu/bits/c++io.h \
+ /usr/include/c++/15.2.1/bits/fstream.tcc /usr/include/c++/15.2.1/set \
+ /usr/include/c++/15.2.1/bits/stl_set.h \
+ /usr/include/c++/15.2.1/bits/stl_multiset.h
