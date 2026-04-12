@@ -22,7 +22,7 @@ project(RTX)
 include_directories(third_party/glad/include)
 
 # Собираем программу вместе с glad.c
-add_executable(rtx main.cpp third_party/glad/src/gl.c)
+add_executable(rtx main.cpp models.cpp base.cpp movement.cpp graphics.cpp third_party/glad/src/gl.c)
 
 # Линкуем SFML и библиотеку dl (иногда нужна на Linux для загрузки OpenGL)
 target_link_libraries(rtx sfml-graphics sfml-window sfml-system dl)
