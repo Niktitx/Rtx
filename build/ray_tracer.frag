@@ -9,17 +9,10 @@ uniform int u_frame;
 uniform int u_seed;
 uniform sampler2D accumTexture;
 uniform int simpleMode;
+uniform int u_bvhDataOffset;
 
 uniform sampler2D u_modelData;
 uniform int u_numTriangles;
-uniform vec3 u_aabbMin;
-uniform vec3 u_aabbMax;
-
-uniform vec3 u_triPosA[12];
-uniform vec3 u_triEdgeAB[12];
-uniform vec3 u_triEdgeAC[12];
-uniform vec3 u_triNormal[12];
-uniform vec3 u_triColor[12];
 
 uint seed;
 out vec4 FragColor;
@@ -91,7 +84,7 @@ const sphere spheres[1] = sphere[](
 
   );
 
-bool hit_aabb(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
+float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
   vec3 invD = 1.0 / (r.direction + 1e-8);
   vec3 t0 = (aabb_min - r.origin) * invD;
   vec3 t1 = (aabb_max - r.origin) * invD;
@@ -102,49 +95,12 @@ bool hit_aabb(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
   float tMin = max(ray_t.x, max(tSmaller.x, max(tSmaller.y, tSmaller.z)));
   float tMax = min(ray_t.y, min(tBigger.x, min(tBigger.y, tBigger.z)));
 
-  return tMin < tMax;
-}
-
-bool hit_triangle(ray r, int i, vec2 ray_t, out hit_record rec) { //ray_t.x is min and ray_t.y is max distance allowed
-
-  vec3 normal = u_triNormal[i];
-
-  float determinant = -dot(r.direction, normal);
-
-  if (abs(determinant) < 1e-6)
-    return false;
-
-  vec3 ao = r.origin - u_triPosA[i];
-  vec3 dao = cross(ao, r.direction);
-  float invDet = 1.0 / determinant;
-
-  float u = dot(u_triEdgeAC[i], dao) * invDet;
-  if (u < 0.0 || u > 1.0)
-    return false;
-
-  float v = -dot(u_triEdgeAB[i], dao) * invDet;
-  if (v < 0.0 || v > 1.0 || u + v > 1.0)
-    return false;
-
-  float dist = dot(ao, normal) * invDet;
-  if (dist < ray_t.x || dist > ray_t.y)
-    return false;
-
-  rec.p = r.origin + r.direction * dist;
-  rec.normal = normalize((determinant > 0.0) ? normal : -normal);
-  rec.t = dist;
-
-  rec.materialId = 0;
-  rec.albedo = u_triColor[i];
-  rec.emission = vec4(0);
-  return true;
+  if (tMin < tMax) return tMin;
+  return -1.0;
 }
 
 bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   if (simpleMode == 1) {
-    return false;
-  }
-  if (!hit_aabb(r, u_aabbMin, u_aabbMax, ray_t)) {
     return false;
   }
 
@@ -152,50 +108,79 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   float closest = ray_t.y;
   int closest_base_index = -1;
 
-  hit_record temp_rec;
+  int stack[32];
+  int stackPtr = 0;
 
-  for (int i = 0; i < u_numTriangles; i++) {
-    // У нас 5 пикселей на треугольник
-    int baseIndex = i * 5;
-    vec3 posA = fetchModelData(baseIndex + 0);
-    vec3 edgeAB = fetchModelData(baseIndex + 1);
-    vec3 edgeAC = fetchModelData(baseIndex + 2);
+  stack[stackPtr++] = 0;
 
-    vec3 pvec = cross(r.direction, edgeAC);
+  while (stackPtr > 0) {
+    int nodeIdx = stack[--stackPtr];
 
-    float determinant = dot(edgeAB, pvec);
-    if (abs(determinant) < 1e-6) continue;
+    int nodeDataIndex = u_bvhDataOffset + nodeIdx * 3;
+    vec3 aabbMin = fetchModelData(nodeDataIndex + 0);
+    vec3 aabbMax = fetchModelData(nodeDataIndex + 1);
+    vec3 data = fetchModelData(nodeDataIndex + 2);
 
-    float invDet = 1.0 / determinant;
-    vec3 ao = r.origin - posA;
+    float dist = hit_aabb_dist(r, aabbMin, aabbMax, vec2(0.001, closest));
+    if (dist < 0.0) continue;
 
-    float u = dot(ao, pvec) * invDet;
-    if (u < 0.0 || u > 1.0) continue;
+    int leftChild = int(data.x);
 
-    vec3 dao = cross(ao, edgeAB);
+    if (leftChild == -1) {
+      int firstTri = int(data.y);
+      int triCount = int(data.z);
 
-    float v = dot(r.direction, dao) * invDet;
-    if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
+      for (int i = 0; i < triCount; i++) {
+        int baseIndex = (i + firstTri) * 5;
+        vec3 posA = fetchModelData(baseIndex + 0);
+        vec3 edgeAB = fetchModelData(baseIndex + 1);
+        vec3 edgeAC = fetchModelData(baseIndex + 2);
 
-    float dist = dot(edgeAC, dao) * invDet;
+        vec3 pvec = cross(r.direction, edgeAC);
 
-    if (dist > ray_t.x && dist < closest) {
-      closest = dist;
-      closest_base_index = baseIndex;
-      hit_anything = true;
+        float determinant = dot(edgeAB, pvec);
+        if (abs(determinant) < 1e-6) continue;
+
+        float invDet = 1.0 / determinant;
+        vec3 ao = r.origin - posA;
+
+        float u = dot(ao, pvec) * invDet;
+        if (u < 0.0 || u > 1.0) continue;
+
+        vec3 dao = cross(ao, edgeAB);
+
+        float v = dot(r.direction, dao) * invDet;
+        if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
+
+        float dist = dot(edgeAC, dao) * invDet;
+
+        if (dist > ray_t.x && dist < closest) {
+          closest = dist;
+          closest_base_index = baseIndex;
+          hit_anything = true;
+        }
+      }
+    } else {
+      int rightChild = int(data.y);
+      if (stackPtr >= 30) break;
+      stack[stackPtr++] = leftChild;
+      stack[stackPtr++] = rightChild;
     }
   }
-  vec3 normal = fetchModelData(closest_base_index + 3);
-  vec3 color = fetchModelData(closest_base_index + 4);
 
-  float determinant = -dot(r.direction, normal);
+  if (hit_anything) {
+    vec3 normal = fetchModelData(closest_base_index + 3);
+    vec3 color = fetchModelData(closest_base_index + 4);
 
-  rec.t = closest;
-  rec.p = r.origin + r.direction * closest;
-  rec.normal = normalize((determinant > 0.0) ? normal : -normal);
-  rec.albedo = color;
-  rec.materialId = 0;
-  rec.emission = vec4(0.0);
+    float determinant = -dot(r.direction, normal);
+
+    rec.t = closest;
+    rec.p = r.origin + r.direction * closest;
+    rec.normal = normalize((determinant > 0.0) ? normal : -normal);
+    rec.albedo = color;
+    rec.materialId = 0;
+    rec.emission = vec4(0.0);
+  }
 
   return hit_anything;
 }
@@ -240,14 +225,14 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
     }
   }
 
-  for (int i = 0; i < u_triNormal.length(); i++) {
-    if (hit_triangle(r, i, vec2(ray_t.x, closest), temp_rec)) {
-      hit_anything = true;
-      closest = temp_rec.t;
-      rec = temp_rec;
-    }
-  }
-
+  // for (int i = 0; i < u_triNormal.length(); i++) {
+  //   if (hit_triangle(r, i, vec2(ray_t.x, closest), temp_rec)) {
+  //     hit_anything = true;
+  //     closest = temp_rec.t;
+  //     rec = temp_rec;
+  //   }
+  // }
+  //
   if (u_numTriangles > 0) {
     if (hit_3d_model(r, vec2(ray_t.x, closest), temp_rec)) {
       hit_anything = true;

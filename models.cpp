@@ -3,22 +3,188 @@
 #include "third_party/glad/include/glad/gl.h"
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/System/Vector3.hpp>
+#include <utility>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "graphics.h"
 #include <tiny_obj_loader.h>
 
-void initTriangles() {
-  for (auto const &t : triangles) {
+void updateNodeBounds(int nodeIdx) {
+  BVHNode &node = bvhNodes[nodeIdx];
+  node.aabbMin = sf::Vector3f(1e9f, 1e9f, 1e9f);
+  node.aabbMax = sf::Vector3f(-1e9f, -1e9f, -1e9f);
+
+  for (int i = 0; i < node.triCount; i++) {
+    int triIdx = bvhTriIndices[node.firstTri + i];
+
+    triangle tri = triangles[triIdx];
+
+    node.aabbMin.x =
+        std::min({node.aabbMin.x, tri.posA.x, tri.posB.x, tri.posC.x});
+    node.aabbMin.y =
+        std::min({node.aabbMin.y, tri.posA.y, tri.posB.y, tri.posC.y});
+    node.aabbMin.z =
+        std::min({node.aabbMin.z, tri.posA.z, tri.posB.z, tri.posC.z});
+
+    node.aabbMax.x =
+        std::max({node.aabbMax.x, tri.posA.x, tri.posB.x, tri.posC.x});
+    node.aabbMax.y =
+        std::max({node.aabbMax.y, tri.posA.y, tri.posB.y, tri.posC.y});
+    node.aabbMax.z =
+        std::max({node.aabbMax.z, tri.posA.z, tri.posB.z, tri.posC.z});
+  }
+}
+
+float getAxisCoord(const sf::Vector3f &v, int axis) {
+  switch (axis) {
+  case 0:
+    return v.x;
+  case 1:
+    return v.y;
+  case 2:
+    return v.z;
+  }
+
+  return 0;
+}
+
+void subDivide(int nodeIdx) {
+  BVHNode &node = bvhNodes[nodeIdx];
+
+  if (node.triCount <= 5) {
+    node.leftChild = -1;
+    return;
+  }
+  sf::Vector3f extend = node.aabbMax - node.aabbMin;
+  int axis = 0;
+  if (extend.y > extend.x)
+    axis = 1;
+  if (extend.z > extend.x && extend.z > extend.y)
+    axis = 2;
+
+  float splitPos =
+      getAxisCoord(node.aabbMin, axis) + getAxisCoord(extend, axis) * 0.5f;
+
+  int i = node.firstTri;
+  int j = i + node.triCount - 1;
+  while (i <= j) {
+    int triIdx = bvhTriIndices[i];
+    triangle &tri = triangles[triIdx];
+    float centroid =
+        (getAxisCoord(tri.posA, axis) + getAxisCoord(tri.posB, axis) +
+         getAxisCoord(tri.posC, axis)) /
+        3.0f;
+
+    if (centroid < splitPos)
+      i++;
+    else {
+      std::swap(bvhTriIndices[i], bvhTriIndices[j]);
+      j--;
+    }
+  }
+
+  int leftCount = i - node.firstTri;
+  if (leftCount == 0 || leftCount == node.triCount) {
+    leftCount = node.triCount / 2;
+
+    // Вот тут неправильно раскидываются треугольники, если все с одной стороны
+    // оказались
+
+    i = node.firstTri + leftCount;
+  }
+
+  int leftChildIdx = bvhNodes.size();
+  bvhNodes.push_back(BVHNode());
+  bvhNodes[leftChildIdx].firstTri = node.firstTri;
+  bvhNodes[leftChildIdx].triCount = leftCount;
+  updateNodeBounds(leftChildIdx);
+  subDivide(leftChildIdx);
+
+  int rightChildIdx = bvhNodes.size();
+  bvhNodes.push_back(BVHNode());
+  bvhNodes[rightChildIdx].firstTri = i;
+  bvhNodes[rightChildIdx].triCount = node.triCount - leftCount;
+  updateNodeBounds(rightChildIdx);
+  subDivide(rightChildIdx);
+
+  node.leftChild = leftChildIdx;
+  node.rightChild = rightChildIdx;
+  node.triCount = 0;
+}
+
+void buildBVH() {
+  bvhTriIndices.resize(numModelTriangles);
+  for (int i = 0; i < numModelTriangles; i++)
+    bvhTriIndices[i] = i;
+
+  BVHNode root;
+  root.leftChild = -1;
+  root.firstTri = 0;
+  root.triCount = numModelTriangles;
+  bvhNodes.push_back(root);
+
+  updateNodeBounds(0);
+  subDivide(0);
+}
+
+void createModelTexData() {
+  for (int i = 0; i < triangles.size(); i++) {
+    const auto &t = triangles[bvhTriIndices[i]];
+
     sf::Vector3f edgeAB = t.posB - t.posA;
     sf::Vector3f edgeAC = t.posC - t.posA;
 
     sf::Vector3f normal(cross(edgeAB, edgeAC));
 
-    triPosA.push_back(sf::Glsl::Vec3(t.posA));
-    triEdgeAB.push_back(sf::Glsl::Vec3(edgeAB));
-    triEdgeAC.push_back(sf::Glsl::Vec3(edgeAC));
-    triNormal.push_back(sf::Glsl::Vec3(normal));
-    triColor.push_back(sf::Glsl::Vec3(t.color));
+    modelTextureData.push_back(t.posA.x); // 1 vec3 - posA
+    modelTextureData.push_back(t.posA.y);
+    modelTextureData.push_back(t.posA.z);
+
+    modelTextureData.push_back(edgeAB.x); // 2 vec3 - edgeAB
+    modelTextureData.push_back(edgeAB.y);
+    modelTextureData.push_back(edgeAB.z);
+
+    modelTextureData.push_back(edgeAC.x); // 3 vec3 - edgeAC
+    modelTextureData.push_back(edgeAC.y);
+    modelTextureData.push_back(edgeAC.z);
+
+    modelTextureData.push_back(normal.x); // 4 vec3 - normal
+    modelTextureData.push_back(normal.y);
+    modelTextureData.push_back(normal.z);
+
+    modelTextureData.push_back(t.color.x); // 5 vec3 - color
+    modelTextureData.push_back(t.color.y);
+    modelTextureData.push_back(t.color.z);
+  }
+
+  int bvhDataOffset = numModelTriangles * 5;
+  ray_tracer.setUniform("u_bvhDataOffset", bvhDataOffset);
+
+  for (int i = 0; i < bvhNodes.size(); i++) { // goes after all triangles data
+    BVHNode &node = bvhNodes[i];
+
+    modelTextureData.push_back(node.aabbMin.x); // 1 vec3 - aabbMin
+    modelTextureData.push_back(node.aabbMin.y);
+    modelTextureData.push_back(node.aabbMin.z);
+
+    modelTextureData.push_back(node.aabbMax.x); // 2 vec3 - aabbMax
+    modelTextureData.push_back(node.aabbMax.y);
+    modelTextureData.push_back(node.aabbMax.z);
+
+    modelTextureData.push_back(
+        node.leftChild); // 3 vec3 : if leaf(no childs): 1 float - leftChild id
+    if (node.leftChild == -1) {
+      modelTextureData.push_back(node.firstTri); // 2 float - first triangle id
+      modelTextureData.push_back(
+          node.triCount); // 3 float - triangles count in this node
+    }
+
+    else {
+
+      modelTextureData.push_back(
+          node.rightChild); // if not leaf (contains child nodes): 2 float -
+                            // rightChild id
+      modelTextureData.push_back(0.0f); // 3 float - just zero
+    }
   }
 }
 
@@ -34,9 +200,6 @@ int loadModel(const std::string &path) {
 
   auto &attrib = reader.GetAttrib();
   auto &shapes = reader.GetShapes();
-
-  modelAABB.min = sf::Vector3f(1e9f, 1e9f, 1e9f);
-  modelAABB.max = sf::Vector3f(-1e9f, -1e9f, -1e9f);
 
   sf::Vector3f defaultColor = white;
 
@@ -60,46 +223,12 @@ int loadModel(const std::string &path) {
                         attrib.vertices[3 * idx2.vertex_index + 1],
                         attrib.vertices[3 * idx2.vertex_index + 2]);
 
-      modelAABB.min.x = std::min({modelAABB.min.x, posA.x, posB.x, posC.x});
-      modelAABB.min.y = std::min({modelAABB.min.y, posA.y, posB.y, posC.y});
-      modelAABB.min.z = std::min({modelAABB.min.z, posA.z, posB.z, posC.z});
-
-      modelAABB.max.x = std::max({modelAABB.max.x, posA.x, posB.x, posC.x});
-      modelAABB.max.y = std::max({modelAABB.max.y, posA.y, posB.y, posC.y});
-      modelAABB.max.z = std::max({modelAABB.max.z, posA.z, posB.z, posC.z});
-
-      sf::Vector3f edgeAB = posB - posA;
-      sf::Vector3f edgeAC = posC - posA;
-
-      sf::Vector3f normal(cross(edgeAB, edgeAC));
-
-      modelTextureData.push_back(posA.x); // 1 vec3 - posA
-      modelTextureData.push_back(posA.y);
-      modelTextureData.push_back(posA.z);
-
-      modelTextureData.push_back(edgeAB.x); // 2 vec3 - edgeAB
-      modelTextureData.push_back(edgeAB.y);
-      modelTextureData.push_back(edgeAB.z);
-
-      modelTextureData.push_back(edgeAC.x); // 3 vec3 - edgeAC
-      modelTextureData.push_back(edgeAC.y);
-      modelTextureData.push_back(edgeAC.z);
-
-      modelTextureData.push_back(normal.x); // 4 vec3 - normal
-      modelTextureData.push_back(normal.y);
-      modelTextureData.push_back(normal.z);
-
-      modelTextureData.push_back(defaultColor.x); // 5 vec3 - defaultColor
-      modelTextureData.push_back(defaultColor.y);
-      modelTextureData.push_back(defaultColor.z);
-
-      numModelTriangles++;
+      triangles.push_back(triangle(posA, posB, posC, defaultColor, 0));
       index_offset += 3;
+      numModelTriangles++;
     }
   }
 
-  modelAABB.min -= sf::Vector3f(0.01f, 0.01f, 0.01f);
-  modelAABB.max += sf::Vector3f(0.01f, 0.01f, 0.01f);
   return 0;
 }
 
@@ -107,9 +236,13 @@ int initializeModel() {
 
   if (loadModel("model.obj") != 0)
     return -1;
+  buildBVH();
+  createModelTexData();
+
   int texWidth = 1024;
   int pixelsPerTriangles = 5;
-  int totalPixels = numModelTriangles * pixelsPerTriangles;
+  int totalPixels =
+      numModelTriangles * pixelsPerTriangles + bvhNodes.size() * 3;
   int texHeight = (totalPixels / texWidth) + 1;
 
   modelTextureData.resize(texWidth * texHeight * 3, 0.0f);
@@ -121,16 +254,7 @@ int initializeModel() {
   glBindTexture(GL_TEXTURE_2D, 0);
 
   ray_tracer.setUniform("u_numTriangles", numModelTriangles);
-  ray_tracer.setUniform("u_aabbMin", sf::Glsl::Vec3(modelAABB.min));
-  ray_tracer.setUniform("u_aabbMax", sf::Glsl::Vec3(modelAABB.max));
   ray_tracer.setUniform("u_modelData", 1);
-
-  initTriangles();
-  ray_tracer.setUniformArray("u_triPosA", triPosA.data(), triPosA.size());
-  ray_tracer.setUniformArray("u_triEdgeAB", triEdgeAB.data(), triEdgeAB.size());
-  ray_tracer.setUniformArray("u_triEdgeAC", triEdgeAC.data(), triEdgeAC.size());
-  ray_tracer.setUniformArray("u_triNormal", triNormal.data(), triNormal.size());
-  ray_tracer.setUniformArray("u_triColor", triColor.data(), triColor.size());
 
   return 0;
 }
