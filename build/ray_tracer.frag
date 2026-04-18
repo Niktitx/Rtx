@@ -64,7 +64,7 @@ void set_face_normal(ray r, vec3 otwards_normal, inout hit_record rec) {
 }
 
 struct material {
-  int ID; // 0 - matte, 1 - metal
+  int ID; // 0 - matte, 1 - metal, 2 - BVH visualization
   vec3 albedo;
   vec4 emission;
 };
@@ -75,11 +75,11 @@ struct sphere {
   material mat;
 };
 
-const sphere spheres[1] = sphere[](
-    // sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0))),
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.25)))
-  // sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.8, 0.3), vec4(0))),
-  // sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0))),
+const sphere spheres[4] = sphere[](
+    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.25))),
+    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0))),
+    sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(2, vec3(0.3, 0.8, 0.3), vec4(0))),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(2, vec3(0.3, 0.3, 0.7), vec4(0.0)))
   // sphere(vec3(0.0, -200.6, -1.0), 200.0, material(0, vec3(0.4, 0.4, 0.0), vec4(0.0)))
 
   );
@@ -96,6 +96,7 @@ float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
   float tMax = min(ray_t.y, min(tBigger.x, min(tBigger.y, tBigger.z)));
 
   if (tMin < tMax) return tMin;
+
   return -1.0;
 }
 
@@ -121,12 +122,21 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
     vec3 aabbMax = fetchModelData(nodeDataIndex + 1);
     vec3 data = fetchModelData(nodeDataIndex + 2);
 
-    float dist = hit_aabb_dist(r, aabbMin, aabbMax, vec2(0.001, closest));
-    if (dist < 0.0) continue;
+    float aabb_dist = hit_aabb_dist(r, aabbMin, aabbMax, vec2(0.001, closest));
+    if (aabb_dist < 0.0) continue;
 
     int leftChild = int(data.x);
 
     if (leftChild == -1) {
+      // hit_anything = true;
+      // rec.t = aabb_dist;
+      // rec.p = r.origin + r.direction * aabb_dist;
+      // rec.normal = vec3(0, 0, 1);
+      // rec.albedo = vec3(1, 0.1, 0.1);
+      // rec.materialId = 2;
+      // rec.emission = vec4(0);
+      // return true;
+
       int firstTri = int(data.y);
       int triCount = int(data.z);
 
@@ -270,6 +280,13 @@ vec3 ray_color(ray r) {
       } else if (rec.materialId == 1) {
         vec3 reflected = reflect(r.direction, rec.normal);
         r = ray(rec.p, reflected);
+      } else if (rec.materialId == 2) {
+        r = ray(rec.p + r.direction * 0.001, r.direction);
+        color *= rec.albedo;
+        vec3 unit_direction = r.direction;
+        float a = 0.5 * (unit_direction.y + 1.0);
+        incoming_light += 0.5 * color * ((1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0));
+        break;
       }
       incoming_light += rec.emission.xyz * rec.emission.w * color;
       color *= rec.albedo;
