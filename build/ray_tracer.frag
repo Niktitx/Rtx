@@ -109,7 +109,8 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   float closest = ray_t.y;
   int closest_base_index = -1;
 
-  int stack[32];
+  const int BVH_STACK_SIZE = 128;
+  int stack[BVH_STACK_SIZE];
   int stackPtr = 0;
 
   stack[stackPtr++] = 0;
@@ -172,9 +173,31 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
       }
     } else {
       int rightChild = int(data.y);
-      if (stackPtr >= 30) break;
-      stack[stackPtr++] = leftChild;
-      stack[stackPtr++] = rightChild;
+      int leftDataIndex = u_bvhDataOffset + leftChild * 3;
+      int rightDataIndex = u_bvhDataOffset + rightChild * 3;
+
+      float leftDist =
+          hit_aabb_dist(r, fetchModelData(leftDataIndex + 0),
+                        fetchModelData(leftDataIndex + 1), vec2(0.001, closest));
+      float rightDist =
+          hit_aabb_dist(r, fetchModelData(rightDataIndex + 0),
+                        fetchModelData(rightDataIndex + 1), vec2(0.001, closest));
+
+      if (leftDist >= 0.0 && rightDist >= 0.0) {
+        bool leftIsNear = leftDist < rightDist;
+        int nearChild = leftIsNear ? leftChild : rightChild;
+        int farChild = leftIsNear ? rightChild : leftChild;
+
+        if (stackPtr + 2 >= BVH_STACK_SIZE) continue;
+        stack[stackPtr++] = farChild;
+        stack[stackPtr++] = nearChild;
+      } else if (leftDist >= 0.0) {
+        if (stackPtr + 1 >= BVH_STACK_SIZE) continue;
+        stack[stackPtr++] = leftChild;
+      } else if (rightDist >= 0.0) {
+        if (stackPtr + 1 >= BVH_STACK_SIZE) continue;
+        stack[stackPtr++] = rightChild;
+      }
     }
   }
 

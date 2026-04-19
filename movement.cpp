@@ -7,7 +7,7 @@ void moveCamera(float dt) {
   sf::Vector2i mousePos = sf::Mouse::getPosition(window);
   sf::Vector2i center(window.getSize().x / 2, window.getSize().y / 2);
 
-  if (!firstMouse) {
+  if (firstMouse) {
     sf::Mouse::setPosition(center, window);
     firstMouse = false;
   }

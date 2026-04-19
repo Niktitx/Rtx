@@ -3,6 +3,7 @@
 #include "third_party/glad/include/glad/gl.h"
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/System/Vector3.hpp>
+#include <cmath>
 #include <utility>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "graphics.h"
@@ -64,32 +65,30 @@ void subDivide(int nodeIdx) {
   float splitPos =
       getAxisCoord(node.aabbMin, axis) + getAxisCoord(extend, axis) * 0.5f;
 
-  int i = node.firstTri;
-  int j = i + node.triCount - 1;
-  while (i <= j) {
-    int triIdx = bvhTriIndices[i];
-    triangle &tri = triangles[triIdx];
-    float centroid =
-        (getAxisCoord(tri.posA, axis) + getAxisCoord(tri.posB, axis) +
-         getAxisCoord(tri.posC, axis)) /
-        3.0f;
+  const int first = node.firstTri;
+  const int end = first + node.triCount;
+  auto triCentroidOnAxis = [axis](int triIdx) {
+    const triangle &tri = triangles[triIdx];
+    return (getAxisCoord(tri.posA, axis) + getAxisCoord(tri.posB, axis) +
+            getAxisCoord(tri.posC, axis)) /
+           3.0f;
+  };
 
-    if (centroid < splitPos)
-      i++;
-    else {
-      std::swap(bvhTriIndices[i], bvhTriIndices[j]);
-      j--;
-    }
-  }
+  auto beginIt = bvhTriIndices.begin() + first;
+  auto endIt = bvhTriIndices.begin() + end;
+  auto midIt = std::partition(beginIt, endIt, [splitPos, &triCentroidOnAxis](int triIdx) {
+    return triCentroidOnAxis(triIdx) < splitPos;
+  });
 
-  int leftCount = i - node.firstTri;
+  int leftCount = static_cast<int>(midIt - beginIt);
   if (leftCount == 0 || leftCount == node.triCount) {
+    int mid = first + node.triCount / 2;
+    std::nth_element(bvhTriIndices.begin() + first, bvhTriIndices.begin() + mid,
+                     bvhTriIndices.begin() + end,
+                     [&triCentroidOnAxis](int lhs, int rhs) {
+                       return triCentroidOnAxis(lhs) < triCentroidOnAxis(rhs);
+                     });
     leftCount = node.triCount / 2;
-
-    // Вот тут неправильно раскидываются треугольники, если все с одной стороны
-    // оказались
-
-    i = node.firstTri + leftCount;
   }
 
   int leftChildIdx = bvhNodes.size();
@@ -101,7 +100,7 @@ void subDivide(int nodeIdx) {
 
   int rightChildIdx = bvhNodes.size();
   bvhNodes.push_back(BVHNode());
-  bvhNodes[rightChildIdx].firstTri = i;
+  bvhNodes[rightChildIdx].firstTri = node.firstTri + leftCount;
   bvhNodes[rightChildIdx].triCount = node.triCount - leftCount;
   updateNodeBounds(rightChildIdx);
   subDivide(rightChildIdx);
@@ -134,6 +133,11 @@ void createModelTexData() {
     sf::Vector3f edgeAC = t.posC - t.posA;
 
     sf::Vector3f normal(cross(edgeAB, edgeAC));
+    float normalLength =
+        std::sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+    if (normalLength > 1e-8f) {
+      normal /= normalLength;
+    }
 
     modelTextureData.push_back(t.posA.x); // 1 vec3 - posA
     modelTextureData.push_back(t.posA.y);
