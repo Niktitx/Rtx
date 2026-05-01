@@ -114,6 +114,8 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
 
   stack[stackPtr++] = 0;
 
+  int aabb_touched = 0;
+
   while (stackPtr > 0) {
     int nodeIdx = stack[--stackPtr];
 
@@ -124,6 +126,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
 
     float aabb_dist = hit_aabb_dist(r, aabbMin, aabbMax, vec2(0.001, closest));
     if (aabb_dist < 0.0) continue;
+    aabb_touched++;
 
     int leftChild = int(data.x);
 

@@ -40,6 +40,7 @@ rtx: \
   /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/../../../../lib/crtn.o \
   /usr/lib32/libfreetype.so.6 \
   /usr/lib/libfreetype.so.6 \
+  /usr/lib/libharfbuzz.so.0 \
   /usr/lib/ld-linux-x86-64.so.2 \
   /usr/lib32/libX11.so.6 \
   /usr/lib/libX11.so.6 \
@@ -56,6 +57,9 @@ rtx: \
   /usr/lib/libpng16.so.16 \
   /usr/lib32/libbrotlidec.so.1 \
   /usr/lib/libbrotlidec.so.1 \
+  /usr/lib32/libglib-2.0.so.0 \
+  /usr/lib/libglib-2.0.so.0 \
+  /usr/lib/libgraphite2.so.3 \
   /usr/lib32/libxcb.so.1 \
   /usr/lib/libxcb.so.1 \
   /usr/lib32/libXext.so.6 \
@@ -65,6 +69,8 @@ rtx: \
   /usr/lib/libXfixes.so.3 \
   /usr/lib32/libbrotlicommon.so.1 \
   /usr/lib/libbrotlicommon.so.1 \
+  /usr/lib32/libpcre2-8.so.0 \
+  /usr/lib/libpcre2-8.so.0 \
   /usr/lib32/libXau.so.6 \
   /usr/lib/libXau.so.6 \
   /usr/lib32/libXdmcp.so.6 \
@@ -152,6 +158,8 @@ CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o:
 
 /usr/lib/libfreetype.so.6:
 
+/usr/lib/libharfbuzz.so.0:
+
 /usr/lib/ld-linux-x86-64.so.2:
 
 /usr/lib32/libX11.so.6:
@@ -184,6 +192,12 @@ CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o:
 
 /usr/lib/libbrotlidec.so.1:
 
+/usr/lib32/libglib-2.0.so.0:
+
+/usr/lib/libglib-2.0.so.0:
+
+/usr/lib/libgraphite2.so.3:
+
 /usr/lib32/libxcb.so.1:
 
 /usr/lib/libxcb.so.1:
@@ -201,6 +215,10 @@ CMakeFiles/rtx.dir/third_party/glad/src/gl.c.o:
 /usr/lib32/libbrotlicommon.so.1:
 
 /usr/lib/libbrotlicommon.so.1:
+
+/usr/lib32/libpcre2-8.so.0:
+
+/usr/lib/libpcre2-8.so.0:
 
 /usr/lib32/libXau.so.6:
 

@@ -56,12 +56,14 @@ CMakeFiles/rtx.dir/base.cpp.o: /home/niktit/Projects/New_RayTracer/base.cpp \
   /usr/include/SFML/System/String.inl \
   /usr/include/SFML/System/Time.hpp \
   /usr/include/SFML/System/Time.inl \
+  /usr/include/SFML/System/TimeoutWithPredicate.hpp \
   /usr/include/SFML/System/Utf.hpp \
   /usr/include/SFML/System/Utf.inl \
   /usr/include/SFML/System/Vector2.hpp \
   /usr/include/SFML/System/Vector2.inl \
   /usr/include/SFML/System/Vector3.hpp \
   /usr/include/SFML/System/Vector3.inl \
+  /usr/include/SFML/System/Version.hpp \
   /usr/include/SFML/Window.hpp \
   /usr/include/SFML/Window/Clipboard.hpp \
   /usr/include/SFML/Window/Context.hpp \
@@ -242,6 +244,7 @@ CMakeFiles/rtx.dir/base.cpp.o: /home/niktit/Projects/New_RayTracer/base.cpp \
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_function.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
@@ -298,6 +301,7 @@ CMakeFiles/rtx.dir/base.cpp.o: /home/niktit/Projects/New_RayTracer/base.cpp \
   /usr/include/c++/15.2.1/ext/string_conversions.h \
   /usr/include/c++/15.2.1/ext/type_traits.h \
   /usr/include/c++/15.2.1/filesystem \
+  /usr/include/c++/15.2.1/functional \
   /usr/include/c++/15.2.1/initializer_list \
   /usr/include/c++/15.2.1/iomanip \
   /usr/include/c++/15.2.1/ios \
@@ -446,12 +450,14 @@ CMakeFiles/rtx.dir/graphics.cpp.o: /home/niktit/Projects/New_RayTracer/graphics.
   /usr/include/SFML/System/String.inl \
   /usr/include/SFML/System/Time.hpp \
   /usr/include/SFML/System/Time.inl \
+  /usr/include/SFML/System/TimeoutWithPredicate.hpp \
   /usr/include/SFML/System/Utf.hpp \
   /usr/include/SFML/System/Utf.inl \
   /usr/include/SFML/System/Vector2.hpp \
   /usr/include/SFML/System/Vector2.inl \
   /usr/include/SFML/System/Vector3.hpp \
   /usr/include/SFML/System/Vector3.inl \
+  /usr/include/SFML/System/Version.hpp \
   /usr/include/SFML/Window.hpp \
   /usr/include/SFML/Window/Clipboard.hpp \
   /usr/include/SFML/Window/Context.hpp \
@@ -632,6 +638,7 @@ CMakeFiles/rtx.dir/graphics.cpp.o: /home/niktit/Projects/New_RayTracer/graphics.
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_function.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
@@ -688,6 +695,7 @@ CMakeFiles/rtx.dir/graphics.cpp.o: /home/niktit/Projects/New_RayTracer/graphics.
   /usr/include/c++/15.2.1/ext/string_conversions.h \
   /usr/include/c++/15.2.1/ext/type_traits.h \
   /usr/include/c++/15.2.1/filesystem \
+  /usr/include/c++/15.2.1/functional \
   /usr/include/c++/15.2.1/initializer_list \
   /usr/include/c++/15.2.1/iomanip \
   /usr/include/c++/15.2.1/ios \
@@ -1229,12 +1237,14 @@ CMakeFiles/rtx.dir/models.cpp.o: /home/niktit/Projects/New_RayTracer/models.cpp 
   /usr/include/SFML/System/String.inl \
   /usr/include/SFML/System/Time.hpp \
   /usr/include/SFML/System/Time.inl \
+  /usr/include/SFML/System/TimeoutWithPredicate.hpp \
   /usr/include/SFML/System/Utf.hpp \
   /usr/include/SFML/System/Utf.inl \
   /usr/include/SFML/System/Vector2.hpp \
   /usr/include/SFML/System/Vector2.inl \
   /usr/include/SFML/System/Vector3.hpp \
   /usr/include/SFML/System/Vector3.inl \
+  /usr/include/SFML/System/Version.hpp \
   /usr/include/SFML/Window.hpp \
   /usr/include/SFML/Window/Clipboard.hpp \
   /usr/include/SFML/Window/Context.hpp \
@@ -1416,6 +1426,7 @@ CMakeFiles/rtx.dir/models.cpp.o: /home/niktit/Projects/New_RayTracer/models.cpp 
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_function.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
@@ -1479,6 +1490,7 @@ CMakeFiles/rtx.dir/models.cpp.o: /home/niktit/Projects/New_RayTracer/models.cpp 
   /usr/include/c++/15.2.1/ext/type_traits.h \
   /usr/include/c++/15.2.1/filesystem \
   /usr/include/c++/15.2.1/fstream \
+  /usr/include/c++/15.2.1/functional \
   /usr/include/c++/15.2.1/initializer_list \
   /usr/include/c++/15.2.1/iomanip \
   /usr/include/c++/15.2.1/ios \
@@ -1634,12 +1646,14 @@ CMakeFiles/rtx.dir/movement.cpp.o: /home/niktit/Projects/New_RayTracer/movement.
   /usr/include/SFML/System/String.inl \
   /usr/include/SFML/System/Time.hpp \
   /usr/include/SFML/System/Time.inl \
+  /usr/include/SFML/System/TimeoutWithPredicate.hpp \
   /usr/include/SFML/System/Utf.hpp \
   /usr/include/SFML/System/Utf.inl \
   /usr/include/SFML/System/Vector2.hpp \
   /usr/include/SFML/System/Vector2.inl \
   /usr/include/SFML/System/Vector3.hpp \
   /usr/include/SFML/System/Vector3.inl \
+  /usr/include/SFML/System/Version.hpp \
   /usr/include/SFML/Window.hpp \
   /usr/include/SFML/Window/Clipboard.hpp \
   /usr/include/SFML/Window/Context.hpp \
@@ -1820,6 +1834,7 @@ CMakeFiles/rtx.dir/movement.cpp.o: /home/niktit/Projects/New_RayTracer/movement.
   /usr/include/c++/15.2.1/bits/specfun.h \
   /usr/include/c++/15.2.1/bits/sstream.tcc \
   /usr/include/c++/15.2.1/bits/std_abs.h \
+  /usr/include/c++/15.2.1/bits/std_function.h \
   /usr/include/c++/15.2.1/bits/stl_algo.h \
   /usr/include/c++/15.2.1/bits/stl_algobase.h \
   /usr/include/c++/15.2.1/bits/stl_bvector.h \
@@ -1876,6 +1891,7 @@ CMakeFiles/rtx.dir/movement.cpp.o: /home/niktit/Projects/New_RayTracer/movement.
   /usr/include/c++/15.2.1/ext/string_conversions.h \
   /usr/include/c++/15.2.1/ext/type_traits.h \
   /usr/include/c++/15.2.1/filesystem \
+  /usr/include/c++/15.2.1/functional \
   /usr/include/c++/15.2.1/initializer_list \
   /usr/include/c++/15.2.1/iomanip \
   /usr/include/c++/15.2.1/ios \
@@ -2067,8 +2083,12 @@ rtx: /usr/lib/Scrt1.o \
   /usr/lib/libc.so.6 \
   /usr/lib/libc_nonshared.a \
   /usr/lib/libfreetype.so.6 \
+  /usr/lib/libglib-2.0.so.0 \
+  /usr/lib/libgraphite2.so.3 \
+  /usr/lib/libharfbuzz.so.0 \
   /usr/lib/libm.so.6 \
   /usr/lib/libmvec.so.1 \
+  /usr/lib/libpcre2-8.so.0 \
   /usr/lib/libpng16.so.16 \
   /usr/lib/libudev.so.1 \
   /usr/lib/libxcb.so.1 \
@@ -2082,6 +2102,8 @@ rtx: /usr/lib/Scrt1.o \
   /usr/lib32/libbrotlidec.so.1 \
   /usr/lib32/libbz2.so.1.0 \
   /usr/lib32/libfreetype.so.6 \
+  /usr/lib32/libglib-2.0.so.0 \
+  /usr/lib32/libpcre2-8.so.0 \
   /usr/lib32/libpng16.so.16 \
   /usr/lib32/libudev.so.1 \
   /usr/lib32/libxcb.so.1 \
@@ -2115,6 +2137,8 @@ CMakeFiles/rtx.dir/base.cpp.o:
 /usr/lib/libudev.so.1:
 
 /usr/lib/libm.so.6:
+
+/usr/lib/libglib-2.0.so.0:
 
 /usr/lib/libc_nonshared.a:
 
@@ -2282,6 +2306,8 @@ CMakeFiles/rtx.dir/base.cpp.o:
 
 /usr/include/c++/15.2.1/istream:
 
+/usr/include/c++/15.2.1/functional:
+
 /usr/include/c++/15.2.1/ext/type_traits.h:
 
 /usr/include/c++/15.2.1/ext/string_conversions.h:
@@ -2346,6 +2372,10 @@ CMakeFiles/rtx.dir/base.cpp.o:
 
 /usr/include/c++/15.2.1/bits/stream_iterator.h:
 
+/usr/include/stdc-predef.h:
+
+/usr/include/c++/15.2.1/bits/stl_tempbuf.h:
+
 /usr/include/tiny_obj_loader.h:
 
 /usr/include/bits/stdint-least.h:
@@ -2376,11 +2406,17 @@ CMakeFiles/rtx.dir/base.cpp.o:
 
 /usr/include/bits/long-double.h:
 
+/usr/lib/libgraphite2.so.3:
+
 /usr/include/bits/libm-simd-decl-stubs.h:
 
 /usr/include/c++/15.2.1/bits/basic_ios.tcc:
 
 /usr/include/bits/fp-logb.h:
+
+/usr/include/c++/15.2.1/bits/stl_vector.h:
+
+/usr/include/asm-generic/errno.h:
 
 /usr/include/features-time64.h:
 
@@ -2393,6 +2429,8 @@ CMakeFiles/rtx.dir/base.cpp.o:
 /usr/include/bits/timex.h:
 
 /usr/include/SFML/Graphics/PrimitiveType.hpp:
+
+/usr/lib32/libglib-2.0.so.0:
 
 /usr/lib32/libbrotlidec.so.1:
 
@@ -2426,9 +2464,7 @@ CMakeFiles/rtx.dir/base.cpp.o:
 
 /usr/include/asm-generic/bitsperlong.h:
 
-/usr/include/stdc-predef.h:
-
-/usr/include/c++/15.2.1/bits/stl_tempbuf.h:
+/usr/lib32/libpcre2-8.so.0:
 
 /usr/include/c++/15.2.1/bits/ostream.h:
 
@@ -2448,6 +2484,8 @@ CMakeFiles/rtx.dir/base.cpp.o:
 
 /usr/include/bits/fp-fast.h:
 
+/usr/lib/libpcre2-8.so.0:
+
 /usr/include/SFML/Graphics/StencilMode.hpp:
 
 /usr/include/c++/15.2.1/bits/streambuf.tcc:
@@ -2455,6 +2493,8 @@ CMakeFiles/rtx.dir/base.cpp.o:
 /usr/include/bits/cpu-set.h:
 
 CMakeFiles/rtx.dir/graphics.cpp.o:
+
+/usr/lib/libharfbuzz.so.0:
 
 /usr/include/c++/15.2.1/bits/cpp_type_traits.h:
 
@@ -2476,6 +2516,10 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 
 /usr/include/bits/floatn.h:
 
+/usr/include/SFML/System/Vector2.inl:
+
+/usr/include/c++/15.2.1/bits/allocator.h:
+
 /usr/include/SFML/Window/Event.hpp:
 
 /usr/include/SFML/System/String.inl:
@@ -2483,10 +2527,6 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 /usr/include/SFML/Graphics/RenderTarget.hpp:
 
 /usr/include/SFML/Window/Touch.hpp:
-
-/usr/include/asm-generic/errno.h:
-
-/usr/include/c++/15.2.1/bits/stl_vector.h:
 
 /usr/include/sys/cdefs.h:
 
@@ -2534,8 +2574,6 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 
 /usr/include/c++/15.2.1/bits/atomic_base.h:
 
-/usr/include/SFML/Graphics/Shader.hpp:
-
 /usr/include/assert.h:
 
 /usr/include/SFML/Window/VideoMode.hpp:
@@ -2578,6 +2616,12 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 
 /usr/include/bits/types/time_t.h:
 
+/usr/include/pthread.h:
+
+/usr/include/c++/15.2.1/bits/stl_uninitialized.h:
+
+/usr/include/c++/15.2.1/bits/stl_algo.h:
+
 /usr/include/c++/15.2.1/iomanip:
 
 /usr/include/SFML/System/Err.hpp:
@@ -2591,10 +2635,6 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 /usr/include/c++/15.2.1/tr1/hypergeometric.tcc:
 
 /usr/include/c++/15.2.1/bits/stl_relops.h:
-
-/usr/include/bits/stdlib-float.h:
-
-/usr/include/bits/time64.h:
 
 /usr/lib32/libXau.so.6:
 
@@ -2611,12 +2651,6 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 /usr/include/asm/errno.h:
 
 /usr/include/SFML/Graphics/CoordinateType.hpp:
-
-/usr/include/asm/posix_types.h:
-
-/usr/include/bits/time.h:
-
-/usr/include/bits/types/__mbstate_t.h:
 
 /usr/lib/Scrt1.o:
 
@@ -2696,6 +2730,8 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 
 /usr/include/c++/15.2.1/filesystem:
 
+/usr/include/SFML/System/Version.hpp:
+
 /usr/include/bits/types/struct_FILE.h:
 
 /usr/lib32/libbz2.so.1.0:
@@ -2770,11 +2806,21 @@ CMakeFiles/rtx.dir/graphics.cpp.o:
 
 /usr/include/c++/15.2.1/bits/basic_string.tcc:
 
+/usr/include/SFML/Graphics/Shader.hpp:
+
+/usr/include/SFML/System/TimeoutWithPredicate.hpp:
+
 /usr/include/SFML/System/Vector2.hpp:
 
-/usr/include/SFML/System/Vector2.inl:
+/usr/include/asm/posix_types.h:
 
-/usr/include/c++/15.2.1/bits/allocator.h:
+/usr/include/bits/time.h:
+
+/usr/include/bits/types/__mbstate_t.h:
+
+/usr/include/bits/stdlib-float.h:
+
+/usr/include/bits/time64.h:
 
 /usr/include/c++/15.2.1/limits:
 
@@ -3018,14 +3064,10 @@ CMakeFiles/rtx.dir/main.cpp.o:
 
 /usr/include/c++/15.2.1/bits/std_abs.h:
 
+/usr/include/c++/15.2.1/bits/std_function.h:
+
 /usr/include/c++/15.2.1/bits/stl_iterator.h:
 
 /usr/include/c++/15.2.1/bits/stl_iterator_base_types.h:
 
 /usr/include/c++/15.2.1/bits/stl_raw_storage_iter.h:
-
-/usr/include/pthread.h:
-
-/usr/include/c++/15.2.1/bits/stl_algo.h:
-
-/usr/include/c++/15.2.1/bits/stl_uninitialized.h:

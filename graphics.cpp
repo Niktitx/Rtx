@@ -10,13 +10,15 @@ int initialize() {
   settings.attributeFlags = sf::ContextSettings::Default;
   settings.sRgbCapable = false;
 
-  if (!ray_tracer.loadFromFile("fullscreen.vert", "ray_tracer.frag")) {
+  if (!ray_tracer.loadFromFile("../shaders/fullscreen.vert",
+                               "../shaders/ray_tracer.frag")) {
     std::cerr << "Failed to load shader";
-    return 1;
+    return -1;
   }
-  if (!to_gamma.loadFromFile("fullscreen.vert", "to_gamma.frag")) {
+  if (!to_gamma.loadFromFile("../shaders/fullscreen.vert",
+                             "../shaders/to_gamma.frag")) {
     std::cerr << "Failed to load shader";
-    return 1;
+    return -1;
   }
 
   window.setMouseCursorVisible(false);
