@@ -1,5 +1,5 @@
 #pragma once
-#include "base.h"
+#include "../base/base.h"
 
 inline sf::Vector3f prevPos = CameraPos;
 inline bool cameraMoved = true;

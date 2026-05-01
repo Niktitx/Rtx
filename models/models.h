@@ -1,5 +1,5 @@
 #pragma once
-#include "base.h"
+#include "../base/base.h"
 #include <SFML/System/Vector3.hpp>
 #include <vector>
 

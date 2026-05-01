@@ -1,7 +1,7 @@
-#include "base.h"
-#include "graphics.h"
-#include "models.h"
-#include "movement.h"
+#include "base/base.h"
+#include "graphics/graphics.h"
+#include "models/models.h"
+#include "movement/movement.h"
 #include <SFML/System/Clock.hpp>
 
 int main() {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "third_party/glad/include/glad/gl.h"
+#include "../third_party/glad/include/glad/gl.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/System/Vector3.hpp>
 #include <SFML/Window/Window.hpp>

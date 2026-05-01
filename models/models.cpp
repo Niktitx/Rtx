@@ -1,11 +1,9 @@
 #include "models.h"
-#include "base.h"
-#include "third_party/glad/include/glad/gl.h"
 #include <SFML/Graphics/Shader.hpp>
 #include <SFML/System/Vector3.hpp>
 #include <utility>
 #define TINYOBJLOADER_IMPLEMENTATION
-#include "graphics.h"
+#include "../graphics/graphics.h"
 #include <tiny_obj_loader.h>
 
 void updateNodeBounds(int nodeIdx) {
