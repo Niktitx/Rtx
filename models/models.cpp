@@ -1,6 +1,5 @@
 #include "models.h"
 #include <SFML/Graphics/Shader.hpp>
-#include <SFML/System/Vector3.hpp>
 #include <utility>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "../graphics/graphics.h"

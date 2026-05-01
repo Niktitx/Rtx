@@ -1,6 +1,5 @@
 #pragma once
 #include "../base/base.h"
-#include <SFML/System/Vector3.hpp>
 
 inline int frameCount = 0;
 inline int current_buffer = 0;

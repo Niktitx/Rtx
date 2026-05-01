@@ -1,5 +1,4 @@
 #include "movement.h"
-#include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Mouse.hpp>
 
 void moveCamera(float dt) {

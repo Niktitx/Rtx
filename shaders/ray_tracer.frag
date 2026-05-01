@@ -17,16 +17,14 @@ uniform int u_numTriangles;
 uint seed;
 out vec4 FragColor;
 
-uint pcg_hash(uint x)
-{
+uint pcg_hash(uint x) {
   x = x * 747796405u + 2891336453u;
   x = ((x >> ((x >> 28u) + 4u)) ^ x) * 277803737u;
   x = (x >> 22u) ^ x;
   return x;
 }
 
-float random()
-{
+float random() {
   seed = pcg_hash(seed);
   return float(seed) / 4294967295.0;
 }
@@ -78,8 +76,8 @@ struct sphere {
 const sphere spheres[4] = sphere[](
     sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.25))),
     sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0))),
-    sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(2, vec3(0.3, 0.8, 0.3), vec4(0))),
-    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(2, vec3(0.3, 0.3, 0.7), vec4(0.0)))
+    sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.8, 0.3), vec4(0))),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0)))
   // sphere(vec3(0.0, -200.6, -1.0), 200.0, material(0, vec3(0.4, 0.4, 0.0), vec4(0.0)))
 
   );

@@ -1,7 +1,5 @@
 #pragma once
 #include "../base/base.h"
-#include <SFML/System/Vector3.hpp>
-#include <vector>
 
 struct BVHNode {
   sf::Vector3f aabbMin, aabbMax;
