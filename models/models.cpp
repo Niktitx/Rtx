@@ -82,7 +82,7 @@ void subDivide(int nodeIdx) {
   int leftCount = i - node.firstTri;
   if (leftCount == 0 || leftCount == node.triCount) {
     leftCount = node.triCount / 2;
-
+    std::cout << "Can't subdivide!\n";
     // Вот тут неправильно раскидываются треугольники, если все с одной стороны
     // оказались
 
@@ -121,6 +121,8 @@ void buildBVH() {
 
   updateNodeBounds(0);
   subDivide(0);
+
+  std::cout << bvhNodes.size() << " bvh nodes\n";
 }
 
 void createModelTexData() {
@@ -168,9 +170,10 @@ void createModelTexData() {
     modelTextureData.push_back(node.aabbMax.z);
 
     modelTextureData.push_back(
-        node.leftChild); // 3 vec3 : if leaf(no childs): 1 float - leftChild id
+        node.leftChild); // 3 vec3: 1 float - leftChild id
     if (node.leftChild == -1) {
-      modelTextureData.push_back(node.firstTri); // 2 float - first triangle id
+      modelTextureData.push_back(
+          node.firstTri); // if leaf(no childs): 2 float - first triangle id
       modelTextureData.push_back(
           node.triCount); // 3 float - triangles count in this node
     }
@@ -237,12 +240,17 @@ int initializeModel() {
   createModelTexData();
 
   int texWidth = 1024;
-  int pixelsPerTriangles = 5;
-  int totalPixels =
-      numModelTriangles * pixelsPerTriangles + bvhNodes.size() * 3;
+  int pixelsPerTriangle = 5;
+  int totalPixels = numModelTriangles * pixelsPerTriangle + bvhNodes.size() * 3;
   int texHeight = (totalPixels / texWidth) + 1;
 
   modelTextureData.resize(texWidth * texHeight * 3, 0.0f);
+
+  for (int i = numModelTriangles * pixelsPerTriangle;
+       i < modelTextureData.size(); i += 3) {
+    std::cout << modelTextureData[i] << " " << modelTextureData[i + 1] << " "
+              << modelTextureData[i + 2] << "\n";
+  }
 
   glBindTexture(GL_TEXTURE_2D, modelTexture);
 

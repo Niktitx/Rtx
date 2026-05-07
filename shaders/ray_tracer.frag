@@ -7,9 +7,10 @@ uniform vec3 u_camRight;
 uniform vec3 u_camUp;
 uniform int u_frame;
 uniform int u_seed;
-uniform sampler2D accumTexture;
-uniform int simpleMode;
+uniform int u_mode;
 uniform int u_bvhDataOffset;
+
+uniform sampler2D accumTexture;
 
 uniform sampler2D u_modelData;
 uniform int u_numTriangles;
@@ -78,8 +79,6 @@ const sphere spheres[4] = sphere[](
     sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0))),
     sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.8, 0.3), vec4(0))),
     sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0)))
-  // sphere(vec3(0.0, -200.6, -1.0), 200.0, material(0, vec3(0.4, 0.4, 0.0), vec4(0.0)))
-
   );
 
 float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
@@ -99,7 +98,7 @@ float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
 }
 
 bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
-  if (simpleMode == 1) {
+  if (u_mode == 0) {
     return false;
   }
 
@@ -129,47 +128,62 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
     int leftChild = int(data.x);
 
     if (leftChild == -1) {
-      // hit_anything = true;
-      // rec.t = aabb_dist;
-      // rec.p = r.origin + r.direction * aabb_dist;
-      // rec.normal = vec3(0, 0, 1);
-      // rec.albedo = vec3(1, 0.1, 0.1);
-      // rec.materialId = 2;
-      // rec.emission = vec4(0);
-      // return true;
+      switch (u_mode) {
+        case 1: //mode 1 - normal render
+        int firstTri = int(data.y);
+        int triCount = int(data.z);
 
-      int firstTri = int(data.y);
-      int triCount = int(data.z);
+        for (int i = 0; i < triCount; i++) {
+          int baseIndex = (i + firstTri) * 5;
+          vec3 posA = fetchModelData(baseIndex + 0);
+          vec3 edgeAB = fetchModelData(baseIndex + 1);
+          vec3 edgeAC = fetchModelData(baseIndex + 2);
 
-      for (int i = 0; i < triCount; i++) {
-        int baseIndex = (i + firstTri) * 5;
-        vec3 posA = fetchModelData(baseIndex + 0);
-        vec3 edgeAB = fetchModelData(baseIndex + 1);
-        vec3 edgeAC = fetchModelData(baseIndex + 2);
+          vec3 pvec = cross(r.direction, edgeAC);
 
-        vec3 pvec = cross(r.direction, edgeAC);
+          float determinant = dot(edgeAB, pvec);
+          if (abs(determinant) < 1e-6) continue;
 
-        float determinant = dot(edgeAB, pvec);
-        if (abs(determinant) < 1e-6) continue;
+          float invDet = 1.0 / determinant;
+          vec3 ao = r.origin - posA;
 
-        float invDet = 1.0 / determinant;
-        vec3 ao = r.origin - posA;
+          float u = dot(ao, pvec) * invDet;
+          if (u < 0.0 || u > 1.0) continue;
 
-        float u = dot(ao, pvec) * invDet;
-        if (u < 0.0 || u > 1.0) continue;
+          vec3 dao = cross(ao, edgeAB);
 
-        vec3 dao = cross(ao, edgeAB);
+          float v = dot(r.direction, dao) * invDet;
+          if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
 
-        float v = dot(r.direction, dao) * invDet;
-        if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
+          float dist = dot(edgeAC, dao) * invDet;
 
-        float dist = dot(edgeAC, dao) * invDet;
-
-        if (dist > ray_t.x && dist < closest) {
-          closest = dist;
-          closest_base_index = baseIndex;
-          hit_anything = true;
+          if (dist > ray_t.x && dist < closest) {
+            closest = dist;
+            closest_base_index = baseIndex;
+            hit_anything = true;
+          }
         }
+        break;
+
+        case 2: //mode 2 - bounding box of whole model
+        hit_anything = true;
+        rec.t = aabb_dist;
+        rec.p = r.origin + r.direction * aabb_dist;
+        rec.normal = vec3(0, 0, 1);
+        rec.albedo = vec3(1, 0.1, 0.1);
+        rec.materialId = 2;
+        rec.emission = vec4(0);
+        return true;
+
+        case 3: //mode 3 - bounding boxes of leafs
+        hit_anything = true;
+        rec.t = aabb_dist;
+        rec.p = r.origin + r.direction * aabb_dist;
+        rec.normal = vec3(0, 0, 1);
+        rec.albedo = vec3(1, 0.1, 0.1);
+        rec.materialId = 2;
+        rec.emission = vec4(0);
+        break;
       }
     } else {
       int rightChild = int(data.y);

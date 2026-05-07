@@ -18,11 +18,26 @@ void getEvent(sf::RenderWindow &window) {
       case Scancode::Escape:
         window.close();
         break;
-      case sf::Keyboard::Scancode::R:
-        simpleMode = 1 - simpleMode;
-        CameraPos.y += 0.0000001f;
+      case sf::Keyboard::Scancode::Num0:
+        mode = 0;
+        break;
+      case sf::Keyboard::Scancode::Num1:
+        mode = 1;
+        break;
+      case sf::Keyboard::Scancode::Num2:
+        mode = 2;
+        break;
+      case sf::Keyboard::Scancode::Num3:
+        mode = 3;
+        break;
+      case sf::Keyboard::Scancode::Num4:
+        mode = 4;
+        break;
+      case sf::Keyboard::Scancode::Num5:
+        mode = 5;
         break;
       }
+      CameraPos.y += 0.0000001f;
     }
 
     if (event->is<sf::Event::FocusLost>())

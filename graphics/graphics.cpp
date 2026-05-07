@@ -62,7 +62,7 @@ void render() {
   ray_tracer.setUniform("u_camRight", sf::Glsl::Vec3(CameraRight));
   ray_tracer.setUniform("u_camUp", sf::Glsl::Vec3(CameraUp));
   ray_tracer.setUniform("u_frame", frameCount++);
-  ray_tracer.setUniform("simpleMode", simpleMode);
+  ray_tracer.setUniform("u_mode", mode);
   ray_tracer.setUniform("u_seed", dist(gen));
 
   glActiveTexture(GL_TEXTURE1);
