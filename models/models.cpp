@@ -103,9 +103,9 @@ void subDivide(int nodeIdx) {
   updateNodeBounds(rightChildIdx);
   subDivide(rightChildIdx);
 
-  node.leftChild = leftChildIdx;
-  node.rightChild = rightChildIdx;
-  node.triCount = 0;
+  bvhNodes[nodeIdx].leftChild = leftChildIdx;
+  bvhNodes[nodeIdx].rightChild = rightChildIdx;
+  bvhNodes[nodeIdx].triCount = 0;
 }
 
 void buildBVH() {
@@ -244,14 +244,14 @@ int initializeModel() {
   int totalPixels = numModelTriangles * pixelsPerTriangle + bvhNodes.size() * 3;
   int texHeight = (totalPixels / texWidth) + 1;
 
-  modelTextureData.resize(texWidth * texHeight * 3, 0.0f);
-
-  for (int i = numModelTriangles * pixelsPerTriangle;
+  for (int i = numModelTriangles * pixelsPerTriangle * 3;
        i < modelTextureData.size(); i += 3) {
-    std::cout << modelTextureData[i] << " " << modelTextureData[i + 1] << " "
+    std::cout << i / 3 - numModelTriangles * pixelsPerTriangle << ". "
+              << modelTextureData[i] << " " << modelTextureData[i + 1] << " "
               << modelTextureData[i + 2] << "\n";
   }
 
+  modelTextureData.resize(texWidth * texHeight * 3, 0.0f);
   glBindTexture(GL_TEXTURE_2D, modelTexture);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, texWidth, texHeight, 0, GL_RGB,
