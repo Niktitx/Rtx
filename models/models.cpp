@@ -244,12 +244,12 @@ int initializeModel() {
   int totalPixels = numModelTriangles * pixelsPerTriangle + bvhNodes.size() * 3;
   int texHeight = (totalPixels / texWidth) + 1;
 
-  for (int i = numModelTriangles * pixelsPerTriangle * 3;
-       i < modelTextureData.size(); i += 3) {
-    std::cout << i / 3 - numModelTriangles * pixelsPerTriangle << ". "
-              << modelTextureData[i] << " " << modelTextureData[i + 1] << " "
-              << modelTextureData[i + 2] << "\n";
-  }
+  // for (int i = numModelTriangles * pixelsPerTriangle * 3;
+  //      i < modelTextureData.size(); i += 3) {
+  //   std::cout << i / 3 - numModelTriangles * pixelsPerTriangle << ". "
+  //             << modelTextureData[i] << " " << modelTextureData[i + 1] << " "
+  //             << modelTextureData[i + 2] << "\n";
+  // }
 
   modelTextureData.resize(texWidth * texHeight * 3, 0.0f);
   glBindTexture(GL_TEXTURE_2D, modelTexture);

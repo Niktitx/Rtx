@@ -1,4 +1,6 @@
 #include "base.h"
+#include <SFML/System/Vector3.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 sf::Vector3f cross(const sf::Vector3f &a, const sf::Vector3f &b) {
   return sf::Vector3f(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z,
@@ -36,8 +38,13 @@ void getEvent(sf::RenderWindow &window) {
       case sf::Keyboard::Scancode::Num5:
         mode = 5;
         break;
+      case sf::Keyboard::Scancode::R:
+        CameraPos = sf::Vector3f(0, 0, 0);
+        yaw = -90;
+        pitch = 0;
+        break;
       }
-      CameraPos.y += 0.0000001f;
+      CameraPos.y += 0.00001f;
     }
 
     if (event->is<sf::Event::FocusLost>())

@@ -106,7 +106,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   float closest = ray_t.y;
   int closest_base_index = -1;
 
-  int stack[32];
+  int stack[16];
   int stackPtr = 0;
 
   stack[stackPtr++] = 0;
@@ -165,7 +165,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
         }
         break;
 
-        case 2: //mode 2 - bounding box of whole model
+        case 2: //mode 2 - bounding boxes of leafs
         hit_anything = true;
         rec.t = aabb_dist;
         rec.p = r.origin + r.direction * aabb_dist;
@@ -174,20 +174,10 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
         rec.materialId = 2;
         rec.emission = vec4(0);
         return true;
-
-        case 3: //mode 3 - bounding boxes of leafs
-        hit_anything = true;
-        rec.t = aabb_dist;
-        rec.p = r.origin + r.direction * aabb_dist;
-        rec.normal = vec3(0, 0, 1);
-        rec.albedo = vec3(1, 0.1, 0.1);
-        rec.materialId = 2;
-        rec.emission = vec4(0);
-        break;
       }
     } else {
       int rightChild = int(data.y);
-      if (stackPtr >= 30) break;
+      if (stackPtr >= 14) break;
       stack[stackPtr++] = leftChild;
       stack[stackPtr++] = rightChild;
     }
