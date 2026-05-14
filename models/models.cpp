@@ -47,7 +47,7 @@ float getAxisCoord(const sf::Vector3f &v, int axis) {
 void subDivide(int nodeIdx) {
   BVHNode &node = bvhNodes[nodeIdx];
 
-  if (node.triCount <= 5) {
+  if (node.triCount <= 20) {
     node.leftChild = -1;
     return;
   }
@@ -234,8 +234,8 @@ int loadModel(const std::string &path) {
 
 int initializeModel() {
 
-  if (loadModel("model.obj") != 0)
-    return -1;
+  // if (loadModel("model.obj") != 0)
+  // return -1;
   buildBVH();
   createModelTexData();
 

@@ -18,7 +18,7 @@ const sf::Vector3f blue(0.1f, 0.1f, 0.8f);
 inline std::mt19937 gen(std::random_device{}());
 inline std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),
                                                std::numeric_limits<int>::max());
-inline int mode = 0;
+inline int mode = 1;
 
 inline sf::Vector3f CameraPos(0.0, 0.0, 0.0);
 inline sf::Vector3f CameraUp(0.0, 1.0, 0.0);

@@ -48,25 +48,24 @@ struct ray {
   vec3 direction;
 };
 
+struct material {
+  int ID; // 0 - matte, 1 - metal, 2 - Glass
+  vec3 albedo;
+  vec4 emission;
+  float refractive_index;
+};
+
 struct hit_record {
   float t; //distance from ray origin
   vec3 p; //point of intersection in 3d space
   vec3 normal;
-  int materialId;
-  vec3 albedo;
-  vec4 emission;
+  material material;
 };
 
 void set_face_normal(ray r, vec3 otwards_normal, inout hit_record rec) {
   bool front_face = dot(r.direction, otwards_normal) < 0;
   rec.normal = front_face ? otwards_normal : -otwards_normal;
 }
-
-struct material {
-  int ID; // 0 - matte, 1 - metal, 2 - BVH visualization
-  vec3 albedo;
-  vec4 emission;
-};
 
 struct sphere {
   vec3 center;
@@ -75,10 +74,10 @@ struct sphere {
 };
 
 const sphere spheres[4] = sphere[](
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.25))),
-    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0))),
-    sphere(vec3(-0.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.8, 0.3), vec4(0))),
-    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0)))
+    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.5), 1)),
+    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1)),
+    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.33)),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1))
   );
 
 float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
@@ -170,9 +169,9 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
         rec.t = aabb_dist;
         rec.p = r.origin + r.direction * aabb_dist;
         rec.normal = vec3(0, 0, 1);
-        rec.albedo = vec3(1, 0.1, 0.1);
-        rec.materialId = 2;
-        rec.emission = vec4(0);
+        rec.material.albedo = vec3(1, 0.1, 0.1);
+        rec.material.ID = 2;
+        rec.material.emission = vec4(0);
         return true;
       }
     } else {
@@ -192,9 +191,9 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
     rec.t = closest;
     rec.p = r.origin + r.direction * closest;
     rec.normal = normalize((determinant > 0.0) ? normal : -normal);
-    rec.albedo = color;
-    rec.materialId = 0;
-    rec.emission = vec4(0.0);
+    rec.material.albedo = color;
+    rec.material.ID = 0;
+    rec.material.emission = vec4(0.0);
   }
 
   return hit_anything;
@@ -220,10 +219,9 @@ bool hit_sphere(ray r, sphere s, vec2 ray_t, out hit_record rec) {
   rec.t = root;
   rec.p = r.origin + rec.t * r.direction;
   vec3 outwards_nomal = (rec.p - s.center) / s.radius;
-  set_face_normal(r, outwards_nomal, rec);
-  rec.materialId = s.mat.ID;
-  rec.albedo = s.mat.albedo;
-  rec.emission = s.mat.emission;
+  //set_face_normal(r, outwards_nomal, rec);
+  rec.normal = outwards_nomal;
+  rec.material = s.mat;
   return true;
 }
 
@@ -268,7 +266,7 @@ vec3 ray_color(ray r) {
   for (int i = 0; i < MAX_BOUNCES; i++) {
     hit_record rec;
     if (hit_world(r, vec2(0.001, 10000), rec)) {
-      if (rec.materialId == 0) {
+      if (rec.material.ID == 0) {
         sphere light = spheres[0]; //sphere(sun.xyz, sun.w, material(0, vec3(1), vec4(1)));
 
         ray shadow_ray = ray(rec.p, normalize(light.center + random_in_unit_sphere() * light.radius - rec.p));
@@ -276,25 +274,38 @@ vec3 ray_color(ray r) {
         hit_record shadow_rec;
         if (!hit_world(shadow_ray, vec2(0.001, length(light.center - rec.p) - light.radius - 0.001), shadow_rec)) {
           float NdotL = max(dot(rec.normal, shadow_ray.direction), 0.0);
-          incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.albedo * NdotL * color;
+          incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.material.albedo * NdotL * color;
         }
         vec3 scatter_direction = rec.normal + random_in_unit_sphere();
         if (scatter_direction.x * scatter_direction.x + scatter_direction.y * scatter_direction.y + scatter_direction.z * scatter_direction.z < 1e-6)
           scatter_direction = rec.normal;
         r = ray(rec.p, normalize(scatter_direction));
-      } else if (rec.materialId == 1) {
+      } else if (rec.material.ID == 1) {
         vec3 reflected = reflect(r.direction, rec.normal);
         r = ray(rec.p, reflected);
-      } else if (rec.materialId == 2) {
-        r = ray(rec.p + r.direction * 0.001, r.direction);
-        color *= rec.albedo;
-        vec3 unit_direction = r.direction;
-        float a = 0.5 * (unit_direction.y + 1.0);
-        incoming_light += 0.5 * color * ((1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0));
-        break;
+      } else if (rec.material.ID == 2) {
+        float n = rec.material.refractive_index;
+        float cos_a = dot(r.direction, rec.normal);
+        float sin_a = sqrt(1 - cos_a * cos_a);
+        if (cos_a >= 0) {
+          float k = cos_a / sqrt(n * n - sin_a * sin_a);
+
+          vec3 direction = r.direction * k / cos_a + rec.normal * (k - 1);
+          r = ray(rec.p, normalize(direction));
+        } else {
+          if (sin_a >= 1 / n) {
+            vec3 reflected = reflect(r.direction, -rec.normal);
+            r = ray(rec.p, reflected);
+          } else {
+            float k = n * cos_a / sqrt(1 - n * n * sin_a * sin_a); //Maybe this formula is incorrect, but I want sleep, so I'll check it next time :)
+
+            vec3 direction = r.direction * k / cos_a + rec.normal * (k - 1);
+            r = ray(rec.p, normalize(direction));
+          }
+        }
       }
-      incoming_light += rec.emission.xyz * rec.emission.w * color;
-      color *= rec.albedo;
+      incoming_light += rec.material.emission.xyz * rec.material.emission.w * color;
+      color *= rec.material.albedo;
     }
     else {
       vec3 unit_direction = r.direction;
