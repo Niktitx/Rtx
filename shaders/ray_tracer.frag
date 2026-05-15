@@ -226,7 +226,6 @@ bool hit_sphere(ray r, sphere s, vec2 ray_t, out hit_record rec) {
   rec.t = root;
   rec.p = r.origin + rec.t * r.direction;
   vec3 outwards_nomal = (rec.p - s.center) / s.radius;
-  //set_face_normal(r, outwards_nomal, rec);
   rec.normal = outwards_nomal;
   rec.material = s.mat;
   return true;
@@ -274,6 +273,8 @@ vec3 ray_color(ray r) {
     hit_record rec;
     if (hit_world(r, vec2(0.001, 10000), rec)) {
       if (rec.material.ID == 0) {
+        if (dot(r.direction, rec.normal) > 0)
+          break;
         sphere light = spheres[0]; //sphere(sun.xyz, sun.w, material(0, vec3(1), vec4(1)));
 
         ray shadow_ray = ray(rec.p, normalize(light.center + random_in_unit_sphere() * light.radius - rec.p));
@@ -294,19 +295,19 @@ vec3 ray_color(ray r) {
         if (MAX_BOUNCES < 10) MAX_BOUNCES++;
         float n = rec.material.refractive_index;
         float cos_a = dot(r.direction, rec.normal);
-        float sin_a = sqrt(1 - cos_a * cos_a);
+        float sin_sq_a = 1 - cos_a * cos_a;
         if (cos_a <= 0) {
-          float k = cos_a / sqrt(n * n - sin_a * sin_a);
+          float k = sqrt(n * n - sin_sq_a);
 
-          vec3 direction = r.direction * k / cos_a + rec.normal * (k - 1);
+          vec3 direction = (r.direction + rec.normal * (cos_a - k)) / k;
           r = ray(rec.p, normalize(direction));
         } else {
-          if (sin_a >= 1 / n) {
+          if (sin_sq_a >= 1 / n / n) {
             vec3 reflected = reflect(r.direction, -rec.normal);
             r = ray(rec.p, reflected);
           } else {
-            float k = cos_a / sqrt(n * n - sin_a * sin_a);
-            vec3 direction = cos_a / k * (r.direction - rec.normal * (k - 1));
+            float k = sqrt(n * n - sin_sq_a);
+            vec3 direction = r.direction * k - rec.normal * (cos_a - k);
             r = ray(rec.p, normalize(direction));
           }
         }

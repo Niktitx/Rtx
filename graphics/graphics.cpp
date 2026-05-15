@@ -98,6 +98,7 @@ void render() {
   glBindVertexArray(0);
 
   window.display();
+
   current_buffer = nextBuffer;
 }
 
