@@ -73,10 +73,11 @@ struct sphere {
   material mat;
 };
 
-const sphere spheres[4] = sphere[](
+const sphere spheres[5] = sphere[](
     sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.5), 1)),
     sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1)),
     sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.33)),
+    sphere(vec3(1, 0.1, -1.0), 0.5, material(0, vec3(0.3, 0.7, 0.3), vec4(0), 1.33)),
     sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1))
   );
 
@@ -191,8 +192,14 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
     rec.t = closest;
     rec.p = r.origin + r.direction * closest;
     rec.normal = normalize((determinant > 0.0) ? normal : -normal);
-    rec.material.albedo = color;
+    if ((int(rec.p.x * 10) + int(rec.p.z * 10)) % 2 == 0 && color == vec3(1)) {
+      rec.material.albedo = color;
+    }
+    else {
+      rec.material.albedo = color * 0.5;
+    }
     rec.material.ID = 0;
+    rec.material.refractive_index = 1.33;
     rec.material.emission = vec4(0.0);
   }
 
@@ -284,10 +291,11 @@ vec3 ray_color(ray r) {
         vec3 reflected = reflect(r.direction, rec.normal);
         r = ray(rec.p, reflected);
       } else if (rec.material.ID == 2) {
+        if (MAX_BOUNCES < 10) MAX_BOUNCES++;
         float n = rec.material.refractive_index;
         float cos_a = dot(r.direction, rec.normal);
         float sin_a = sqrt(1 - cos_a * cos_a);
-        if (cos_a >= 0) {
+        if (cos_a <= 0) {
           float k = cos_a / sqrt(n * n - sin_a * sin_a);
 
           vec3 direction = r.direction * k / cos_a + rec.normal * (k - 1);
@@ -297,9 +305,8 @@ vec3 ray_color(ray r) {
             vec3 reflected = reflect(r.direction, -rec.normal);
             r = ray(rec.p, reflected);
           } else {
-            float k = n * cos_a / sqrt(1 - n * n * sin_a * sin_a); //Maybe this formula is incorrect, but I want sleep, so I'll check it next time :)
-
-            vec3 direction = r.direction * k / cos_a + rec.normal * (k - 1);
+            float k = cos_a / sqrt(n * n - sin_a * sin_a);
+            vec3 direction = cos_a / k * (r.direction - rec.normal * (k - 1));
             r = ray(rec.p, normalize(direction));
           }
         }
