@@ -1,13 +1,6 @@
 #version 330 core
 
 uniform vec2 u_resolution;
-uniform vec3 u_cameraPos;
-uniform vec3 u_camFront;
-uniform vec3 u_camRight;
-uniform vec3 u_camUp;
-uniform int u_frame;
-uniform int u_seed;
-uniform int u_mode;
 uniform int u_bvhDataOffset;
 
 uniform sampler2D accumTexture;
@@ -15,8 +8,18 @@ uniform sampler2D accumTexture;
 uniform sampler2D u_modelData;
 uniform int u_numTriangles;
 
+uniform vec3 u_cameraPos;
+uniform vec3 u_camFront;
+uniform vec3 u_camRight;
+uniform vec3 u_camUp;
+uniform int u_frame;
+uniform int u_seed;
+uniform int u_mode;
+
 uint seed;
 out vec4 FragColor;
+
+//==========DATA OPERATING AND MATH FUNCTIONS==========//
 
 uint pcg_hash(uint x) {
   x = x * 747796405u + 2891336453u;
@@ -30,6 +33,12 @@ float random() {
   return float(seed) / 4294967295.0;
 }
 
+vec3 fetchModelData(int index) {
+  int x = index & 1023;
+  int y = index >> 10;
+  return texelFetch(u_modelData, ivec2(x, y), 0).rgb;
+}
+
 vec3 random_in_unit_sphere() {
   float a = random() * 2.0 * 3.141592;
   float z = random() * 2.0 - 1;
@@ -37,11 +46,7 @@ vec3 random_in_unit_sphere() {
   return vec3(r * cos(a), r * sin(a), z);
 }
 
-vec3 fetchModelData(int index) {
-  int x = index & 1023;
-  int y = index >> 10;
-  return texelFetch(u_modelData, ivec2(x, y), 0).rgb;
-}
+//==========STRUCTURES==========//
 
 struct ray {
   vec3 origin;
@@ -51,8 +56,9 @@ struct ray {
 struct material {
   int ID; // 0 - matte, 1 - metal, 2 - Glass
   vec3 albedo;
-  vec4 emission;
+  vec4 emission; //r, g, b and emission power
   float refractive_index;
+  float reflection_chance;
 };
 
 struct hit_record {
@@ -62,24 +68,36 @@ struct hit_record {
   material material;
 };
 
-void set_face_normal(ray r, vec3 otwards_normal, inout hit_record rec) {
-  bool front_face = dot(r.direction, otwards_normal) < 0;
-  rec.normal = front_face ? otwards_normal : -otwards_normal;
-}
-
 struct sphere {
   vec3 center;
   float radius;
   material mat;
 };
 
+struct plane {
+  vec3 origin;
+  vec3 normal;
+  material mat;
+};
+
 const sphere spheres[5] = sphere[](
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.5), 1)),
-    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1)),
-    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.33)),
-    sphere(vec3(1, 0.1, -1.0), 0.5, material(0, vec3(0.3, 0.7, 0.3), vec4(0), 1.33)),
-    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1))
+    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.5), 1, 0)),
+    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1, 0)),
+    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.33, 0)),
+    sphere(vec3(1, 0.0, -1.0), 0.5, material(0, vec3(0.3, 0.7, 0.3), vec4(0), 1, 0)),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1, 0))
   );
+
+const plane cornellBox[6] = plane[](
+    plane(vec3(0, 2, 0), vec3(0, -1, 0), material(0, vec3(1), vec4(0), 1, 0)),
+    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(0, vec3(1), vec4(0), 1, 0.2)),
+    plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(0, vec3(0.1, 0.8, 0.1), vec4(0), 1, 0)),
+    plane(vec3(2.5, 2, 0), vec3(-1, 0, 0), material(0, vec3(0.8, 0.1, 0.1), vec4(0), 1, 0)),
+    plane(vec3(0, 0, -3), vec3(0, 0, 1), material(0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0)),
+    plane(vec3(0, 0, 1), vec3(0, 0, -1), material(0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0))
+  );
+
+//==========RAY HIT FUNCTIONS==========//
 
 float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
   vec3 invD = 1.0 / (r.direction + 1e-8);
@@ -93,7 +111,6 @@ float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
   float tMax = min(ray_t.y, min(tBigger.x, min(tBigger.y, tBigger.z)));
 
   if (tMin < tMax) return tMin;
-
   return -1.0;
 }
 
@@ -111,8 +128,6 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
 
   stack[stackPtr++] = 0;
 
-  int aabb_touched = 0;
-
   while (stackPtr > 0) {
     int nodeIdx = stack[--stackPtr];
 
@@ -123,7 +138,6 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
 
     float aabb_dist = hit_aabb_dist(r, aabbMin, aabbMax, vec2(0.001, closest));
     if (aabb_dist < 0.0) continue;
-    aabb_touched++;
 
     int leftChild = int(data.x);
 
@@ -225,16 +239,39 @@ bool hit_sphere(ray r, sphere s, vec2 ray_t, out hit_record rec) {
 
   rec.t = root;
   rec.p = r.origin + rec.t * r.direction;
-  vec3 outwards_nomal = (rec.p - s.center) / s.radius;
-  rec.normal = outwards_nomal;
+  rec.normal = (rec.p - s.center) / s.radius;
   rec.material = s.mat;
   return true;
+}
+
+bool hit_plane(ray r, plane p, vec2 ray_t, out hit_record rec) {
+  if (dot(r.direction, p.normal) < 0) {
+    rec.t = dot(p.origin - r.origin, -p.normal) / dot(r.direction, -p.normal);
+    if (rec.t < ray_t.x || rec.t > ray_t.y)
+      return false;
+    rec.p = r.origin + rec.t * r.direction;
+    rec.normal = p.normal;
+    rec.material = p.mat;
+    if ((int(rec.p.x * 10) + int(rec.p.z * 10)) % 2 == 0 && p.mat.albedo == vec3(1)) {
+      rec.material.albedo = vec3(0.5);
+    }
+    return true;
+  }
+  return false;
 }
 
 bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
   hit_record temp_rec;
   bool hit_anything = false;
   float closest = ray_t.y;
+
+  for (int i = 0; i < cornellBox.length(); i++) {
+    if (hit_plane(r, cornellBox[i], vec2(ray_t.x, closest), temp_rec)) {
+      hit_anything = true;
+      closest = temp_rec.t;
+      rec = temp_rec;
+    }
+  }
 
   for (int i = 0; i < spheres.length(); i++) {
     if (hit_sphere(r, spheres[i], vec2(ray_t.x, closest), temp_rec)) {
@@ -244,26 +281,130 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
     }
   }
 
-  // for (int i = 0; i < u_triNormal.length(); i++) {
-  //   if (hit_triangle(r, i, vec2(ray_t.x, closest), temp_rec)) {
+  // if (u_numTriangles > 0) {
+  //   if (hit_3d_model(r, vec2(ray_t.x, closest), temp_rec)) {
   //     hit_anything = true;
   //     closest = temp_rec.t;
   //     rec = temp_rec;
   //   }
   // }
-  //
-  if (u_numTriangles > 0) {
-    if (hit_3d_model(r, vec2(ray_t.x, closest), temp_rec)) {
-      hit_anything = true;
-      closest = temp_rec.t;
-      rec = temp_rec;
-    }
-  }
 
   return hit_anything;
 }
 
-vec4 sun = vec4(-500, 400, -300, 100);
+//==========SHADOW RAY HIT FUNCTIONS==========//
+
+bool shadow_hit_3d_model(ray r, vec2 ray_t) {
+  if (u_mode == 0) {
+    return false;
+  }
+
+  int stack[16];
+  int stackPtr = 0;
+
+  stack[stackPtr++] = 0;
+
+  while (stackPtr > 0) {
+    int nodeIdx = stack[--stackPtr];
+
+    int nodeDataIndex = u_bvhDataOffset + nodeIdx * 3;
+    vec3 aabbMin = fetchModelData(nodeDataIndex + 0);
+    vec3 aabbMax = fetchModelData(nodeDataIndex + 1);
+    vec3 data = fetchModelData(nodeDataIndex + 2);
+
+    float aabb_dist = hit_aabb_dist(r, aabbMin, aabbMax, ray_t);
+    if (aabb_dist < 0.0) continue;
+
+    int leftChild = int(data.x);
+
+    if (leftChild == -1) {
+      int firstTri = int(data.y);
+      int triCount = int(data.z);
+
+      for (int i = 0; i < triCount; i++) {
+        int baseIndex = (i + firstTri) * 5;
+        vec3 posA = fetchModelData(baseIndex + 0);
+        vec3 edgeAB = fetchModelData(baseIndex + 1);
+        vec3 edgeAC = fetchModelData(baseIndex + 2);
+
+        vec3 pvec = cross(r.direction, edgeAC);
+
+        float determinant = dot(edgeAB, pvec);
+        if (abs(determinant) < 1e-6) continue;
+
+        float invDet = 1.0 / determinant;
+        vec3 ao = r.origin - posA;
+
+        float u = dot(ao, pvec) * invDet;
+        if (u < 0.0 || u > 1.0) continue;
+
+        vec3 dao = cross(ao, edgeAB);
+
+        float v = dot(r.direction, dao) * invDet;
+        if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
+
+        float dist = dot(edgeAC, dao) * invDet;
+
+        if (dist > ray_t.x && dist < ray_t.y) {
+          return true;
+        }
+      }
+    } else {
+      int rightChild = int(data.y);
+      if (stackPtr >= 14) break;
+      stack[stackPtr++] = leftChild;
+      stack[stackPtr++] = rightChild;
+    }
+  }
+  return false;
+}
+
+bool shadow_hit_sphere(ray r, sphere s, vec2 ray_t) {
+  vec3 oc = r.origin - s.center;
+  float h = dot(r.direction, oc);
+  float c = dot(oc, oc) - s.radius * s.radius;
+
+  float discriminant = h * h - c;
+  if (discriminant < 0.0)
+    return false;
+  float sqrtd = sqrt(discriminant);
+
+  float root = -h - sqrtd;
+  if (root < ray_t.x || root > ray_t.y) {
+    root = -h + sqrtd;
+    if (root < ray_t.x || root > ray_t.y)
+      return false;
+  }
+
+  return true;
+}
+
+bool shadow_hit_world(ray r, vec2 ray_t) {
+  for (int i = 0; i < spheres.length(); i++) {
+    if (shadow_hit_sphere(r, spheres[i], ray_t))
+      return true;
+  }
+  // for (int i = 0; i < cornellBox.length(); i++) {
+  //   plane p = cornellBox[i];
+  //   if (dot(r.direction, p.normal) < 0) {
+  //     float t = dot(p.origin - r.origin, -p.normal) / dot(r.direction, -p.normal);
+  //     if (t > ray_t.x && t < ray_t.y)
+  //       return true;
+  //   }
+  // }
+  //
+
+  // if (u_numTriangles > 0) {
+  //   if (shadow_hit_3d_model(r, ray_t)) {
+  //     return true;
+  //   }
+  // }
+  return false;
+}
+
+//==========RAY BOUNCING FUNCTION==========//
+
+//sphere sun(vec3(-500, 400, -300), 100, material(0, vec3(1), vec4(1), 0));
 
 vec3 ray_color(ray r) {
   vec3 color = vec3(1.0);
@@ -275,18 +416,23 @@ vec3 ray_color(ray r) {
       if (rec.material.ID == 0) {
         if (dot(r.direction, rec.normal) > 0)
           break;
-        sphere light = spheres[0]; //sphere(sun.xyz, sun.w, material(0, vec3(1), vec4(1)));
 
+        if (random() < rec.material.reflection_chance) {
+          vec3 reflected = reflect(r.direction, rec.normal);
+          r = ray(rec.p, reflected);
+          incoming_light += rec.material.emission.xyz * rec.material.emission.w * color;
+          color *= rec.material.albedo;
+          continue;
+        }
+        sphere light = spheres[0]; //sphere(sun.xyz, sun.w, material(0, vec3(1), vec4(1)));
         ray shadow_ray = ray(rec.p, normalize(light.center + random_in_unit_sphere() * light.radius - rec.p));
 
-        hit_record shadow_rec;
-        if (!hit_world(shadow_ray, vec2(0.001, length(light.center - rec.p) - light.radius - 0.001), shadow_rec)) {
+        if (!shadow_hit_world(shadow_ray, vec2(0.001, length(light.center - rec.p) - light.radius - 0.001))) {
           float NdotL = max(dot(rec.normal, shadow_ray.direction), 0.0);
           incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.material.albedo * NdotL * color;
         }
         vec3 scatter_direction = rec.normal + random_in_unit_sphere();
-        if (scatter_direction.x * scatter_direction.x + scatter_direction.y * scatter_direction.y + scatter_direction.z * scatter_direction.z < 1e-6)
-          scatter_direction = rec.normal;
+
         r = ray(rec.p, normalize(scatter_direction));
       } else if (rec.material.ID == 1) {
         vec3 reflected = reflect(r.direction, rec.normal);
@@ -324,6 +470,8 @@ vec3 ray_color(ray r) {
   }
   return incoming_light;
 }
+
+//==========MAIN FUNCTION==========//
 
 void main()
 {

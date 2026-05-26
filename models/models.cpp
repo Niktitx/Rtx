@@ -58,20 +58,25 @@ void subDivide(int nodeIdx) {
   if (extend.z > extend.x && extend.z > extend.y)
     axis = 2;
 
-  float splitPos =
-      getAxisCoord(node.aabbMin, axis) + getAxisCoord(extend, axis) * 0.5f;
+  float splitPos = 0;
+  float centroids[node.triCount];
+  //  getAxisCoord(node.aabbMin, axis) + getAxisCoord(extend, axis) * 0.5f;
 
-  int i = node.firstTri;
-  int j = i + node.triCount - 1;
-  while (i <= j) {
+  for (int i = 0; i < node.triCount; i++) {
     int triIdx = bvhTriIndices[i];
     triangle &tri = triangles[triIdx];
     float centroid =
         (getAxisCoord(tri.posA, axis) + getAxisCoord(tri.posB, axis) +
          getAxisCoord(tri.posC, axis)) /
         3.0f;
-
-    if (centroid < splitPos)
+    centroids[i] = centroid;
+    splitPos += centroid;
+  }
+  splitPos /= node.triCount;
+  int i = node.firstTri;
+  int j = i + node.triCount - 1;
+  while (i <= j) {
+    if (centroids[i] < splitPos)
       i++;
     else {
       std::swap(bvhTriIndices[i], bvhTriIndices[j]);
@@ -81,11 +86,13 @@ void subDivide(int nodeIdx) {
 
   int leftCount = i - node.firstTri;
   if (leftCount == 0 || leftCount == node.triCount) {
-    leftCount = node.triCount / 2;
-    std::cout << "Can't subdivide!\n";
+    std::cout << "Can't subdivide! left: " << leftCount
+              << ", right: " << node.triCount - leftCount
+              << ", tri: " << node.triCount << "\n";
     // Вот тут неправильно раскидываются треугольники, если все с одной стороны
     // оказались
 
+    leftCount = node.triCount / 2;
     i = node.firstTri + leftCount;
   }
 
@@ -235,7 +242,7 @@ int loadModel(const std::string &path) {
 int initializeModel() {
 
   // if (loadModel("model.obj") != 0)
-  // return -1;
+  //   return -1;
   buildBVH();
   createModelTexData();
 
@@ -243,7 +250,7 @@ int initializeModel() {
   int pixelsPerTriangle = 5;
   int totalPixels = numModelTriangles * pixelsPerTriangle + bvhNodes.size() * 3;
   int texHeight = (totalPixels / texWidth) + 1;
-
+  //
   // for (int i = numModelTriangles * pixelsPerTriangle * 3;
   //      i < modelTextureData.size(); i += 3) {
   //   std::cout << i / 3 - numModelTriangles * pixelsPerTriangle << ". "

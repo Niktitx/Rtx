@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include <SFML/System/Vector3.hpp>
 
 int initialize() {
   if (!gladLoadGL(reinterpret_cast<GLADloadfunc>(sf::Context::getFunction))) {
@@ -98,7 +99,6 @@ void render() {
   glBindVertexArray(0);
 
   window.display();
-
   current_buffer = nextBuffer;
 }
 
