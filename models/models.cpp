@@ -241,8 +241,8 @@ int loadModel(const std::string &path) {
 
 int initializeModel() {
 
-  // if (loadModel("model.obj") != 0)
-  //   return -1;
+  if (loadModel("model.obj") != 0)
+    return -1;
   buildBVH();
   createModelTexData();
 

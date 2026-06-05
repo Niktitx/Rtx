@@ -1,5 +1,42 @@
 #include "graphics.h"
+#include <SFML/Graphics/Shader.hpp>
 #include <SFML/System/Vector3.hpp>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+static std::string readFile(const std::string &path) {
+  std::ifstream file(path);
+  if (!file.is_open()) {
+    std::cerr << "Cannot open file: " << path << std::endl;
+    return "";
+  }
+  std::ostringstream ss;
+  ss << file.rdbuf();
+  return ss.str();
+}
+
+static std::string injectDefines(const std::string &src,
+                                 const std::string &defines) {
+  if (defines.empty())
+    return src;
+  auto lineEnd = src.find('\n');
+  if (lineEnd == std::string::npos)
+    return src + "\n" + defines + "\n";
+  return src.substr(0, lineEnd + 1) + defines + "\n" + src.substr(lineEnd + 1);
+}
+
+static bool loadShaderWithDefines(sf::Shader &shader,
+                                  const std::string &vertSrc,
+                                  const std::string &fragSrc,
+                                  const std::string &defines) {
+  std::string patchedFrag = injectDefines(fragSrc, defines);
+  if (!shader.loadFromMemory(vertSrc, patchedFrag)) {
+    std::cerr << "Shader compile error: Defines: [" << defines << "]\n";
+    return false;
+  }
+  return true;
+}
 
 int initialize() {
   if (!gladLoadGL(reinterpret_cast<GLADloadfunc>(sf::Context::getFunction))) {
@@ -11,10 +48,23 @@ int initialize() {
   settings.attributeFlags = sf::ContextSettings::Default;
   settings.sRgbCapable = false;
 
-  if (!ray_tracer.loadFromFile("../shaders/fullscreen.vert",
-                               "../shaders/ray_tracer.frag")) {
-    std::cerr << "Failed to load shader";
+  std::string vertSrc = readFile("../shaders/fullscreen.vert");
+  std::string fragSrc = readFile("../shaders/ray_tracer.frag");
+
+  if (vertSrc.empty() || fragSrc.empty())
     return -1;
+  if (!loadShaderWithDefines(ray_tracer_simple, vertSrc, fragSrc, "")) {
+    std::cerr << "Failed to compile simple shader\n";
+    return -1;
+  }
+  if (!loadShaderWithDefines(ray_tracer, vertSrc, fragSrc,
+                             "#define RENDER_3D_MODELS")) {
+    std::cerr << "Failed to compile BVH shader\n";
+    return -1;
+  }
+
+  for (sf::Shader *sh : {&ray_tracer_simple, &ray_tracer}) {
+    sh->setUniform("u_resolution", sf::Glsl::Vec2(WIDTH, HEIGHT));
   }
   if (!to_gamma.loadFromFile("../shaders/fullscreen.vert",
                              "../shaders/to_gamma.frag")) {
@@ -24,8 +74,9 @@ int initialize() {
 
   window.setMouseCursorVisible(false);
 
-  ray_tracer.setUniform("u_resolution", sf::Glsl::Vec2(WIDTH, HEIGHT));
   to_gamma.setUniform("u_resolution", sf::Glsl::Vec2(WIDTH, HEIGHT));
+
+  current_ray_tracer = &ray_tracer_simple;
 
   glGenTextures(1, &modelTexture);
   glBindTexture(GL_TEXTURE_2D, modelTexture);
@@ -57,14 +108,15 @@ int initialize() {
 
 void render() {
   int nextBuffer = 1 - current_buffer;
+  current_ray_tracer = (mode == 0) ? &ray_tracer_simple : &ray_tracer;
 
-  ray_tracer.setUniform("u_cameraPos", sf::Glsl::Vec3(CameraPos));
-  ray_tracer.setUniform("u_camFront", sf::Glsl::Vec3(CameraFront));
-  ray_tracer.setUniform("u_camRight", sf::Glsl::Vec3(CameraRight));
-  ray_tracer.setUniform("u_camUp", sf::Glsl::Vec3(CameraUp));
-  ray_tracer.setUniform("u_frame", frameCount++);
-  ray_tracer.setUniform("u_mode", mode);
-  ray_tracer.setUniform("u_seed", dist(gen));
+  current_ray_tracer->setUniform("u_cameraPos", sf::Glsl::Vec3(CameraPos));
+  current_ray_tracer->setUniform("u_camFront", sf::Glsl::Vec3(CameraFront));
+  current_ray_tracer->setUniform("u_camRight", sf::Glsl::Vec3(CameraRight));
+  current_ray_tracer->setUniform("u_camUp", sf::Glsl::Vec3(CameraUp));
+  current_ray_tracer->setUniform("u_frame", frameCount++);
+  current_ray_tracer->setUniform("u_mode", mode);
+  current_ray_tracer->setUniform("u_seed", dist(gen));
 
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, modelTexture);
@@ -72,11 +124,11 @@ void render() {
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[nextBuffer]);
   glViewport(0, 0, WIDTH, HEIGHT);
 
-  sf::Shader::bind(&ray_tracer);
+  sf::Shader::bind(current_ray_tracer);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, accumTextures[current_buffer]);
-  ray_tracer.setUniform("accumTexture", 0);
+  current_ray_tracer->setUniform("accumTexture", 0);
 
   glBindVertexArray(emptyVAO);
   glDrawArrays(GL_TRIANGLES, 0, 3);

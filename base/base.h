@@ -32,8 +32,6 @@ inline float pitch = 0.0f;
 inline bool firstMouse = true;
 
 inline sf::RenderWindow window(sf::VideoMode({WIDTH, HEIGHT}), "RTX");
-inline sf::Shader ray_tracer;
-inline sf::Shader to_gamma;
 
 sf::Vector3f cross(const sf::Vector3f &a, const sf::Vector3f &b);
 void getEvent(sf::RenderWindow &window);

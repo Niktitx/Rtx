@@ -1,5 +1,4 @@
-#version 330 core
-
+#version 330
 uniform vec2 u_resolution;
 uniform int u_bvhDataOffset;
 
@@ -13,8 +12,8 @@ uniform vec3 u_camFront;
 uniform vec3 u_camRight;
 uniform vec3 u_camUp;
 uniform int u_frame;
-uniform int u_seed;
 uniform int u_mode;
+uniform int u_seed;
 
 uint seed;
 out vec4 FragColor;
@@ -39,7 +38,7 @@ vec3 fetchModelData(int index) {
   return texelFetch(u_modelData, ivec2(x, y), 0).rgb;
 }
 
-vec3 random_in_unit_sphere() {
+vec3 random_on_unit_sphere() {
   float a = random() * 2.0 * 3.141592;
   float z = random() * 2.0 - 1;
   float r = sqrt(1.0 - z * z);
@@ -54,7 +53,7 @@ struct ray {
 };
 
 struct material {
-  int ID; // 0 - matte, 1 - metal, 2 - Glass
+  int ID; // 0 - Lambertian, 1 - metal, 2 - Glass
   vec3 albedo;
   vec4 emission; //r, g, b and emission power
   float refractive_index;
@@ -81,16 +80,16 @@ struct plane {
 };
 
 const sphere spheres[5] = sphere[](
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 0.5), 1, 0)),
+    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 1), 1, 0)),
     sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1, 0)),
-    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.33, 0)),
+    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.5, 0)),
     sphere(vec3(1, 0.0, -1.0), 0.5, material(0, vec3(0.3, 0.7, 0.3), vec4(0), 1, 0)),
     sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1, 0))
   );
 
 const plane cornellBox[6] = plane[](
     plane(vec3(0, 2, 0), vec3(0, -1, 0), material(0, vec3(1), vec4(0), 1, 0)),
-    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(0, vec3(1), vec4(0), 1, 0.2)),
+    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(0, vec3(1), vec4(0), 1, 0)),
     plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(0, vec3(0.1, 0.8, 0.1), vec4(0), 1, 0)),
     plane(vec3(2.5, 2, 0), vec3(-1, 0, 0), material(0, vec3(0.8, 0.1, 0.1), vec4(0), 1, 0)),
     plane(vec3(0, 0, -3), vec3(0, 0, 1), material(0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0)),
@@ -99,8 +98,9 @@ const plane cornellBox[6] = plane[](
 
 //==========RAY HIT FUNCTIONS==========//
 
-float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
-  vec3 invD = 1.0 / (r.direction + 1e-8);
+//vector2 ray_t is an interval in which collision will be detected. x is minimum distance from ray origin and y is maximum
+
+float hit_aabb_dist(ray r, vec3 invD, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
   vec3 t0 = (aabb_min - r.origin) * invD;
   vec3 t1 = (aabb_max - r.origin) * invD;
 
@@ -115,10 +115,6 @@ float hit_aabb_dist(ray r, vec3 aabb_min, vec3 aabb_max, vec2 ray_t) {
 }
 
 bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
-  if (u_mode == 0) {
-    return false;
-  }
-
   bool hit_anything = false;
   float closest = ray_t.y;
   int closest_base_index = -1;
@@ -128,15 +124,17 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
 
   stack[stackPtr++] = 0;
 
+  vec3 invRayDir = 1.0 / r.direction;
+
   while (stackPtr > 0) {
     int nodeIdx = stack[--stackPtr];
 
-    int nodeDataIndex = u_bvhDataOffset + nodeIdx * 3;
+    int nodeDataIndex = u_bvhDataOffset + nodeIdx * 3; //fetching data of specific triangle
     vec3 aabbMin = fetchModelData(nodeDataIndex + 0);
     vec3 aabbMax = fetchModelData(nodeDataIndex + 1);
     vec3 data = fetchModelData(nodeDataIndex + 2);
 
-    float aabb_dist = hit_aabb_dist(r, aabbMin, aabbMax, vec2(0.001, closest));
+    float aabb_dist = hit_aabb_dist(r, invRayDir, aabbMin, aabbMax, vec2(0.001, closest));
     if (aabb_dist < 0.0) continue;
 
     int leftChild = int(data.x);
@@ -167,7 +165,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
           vec3 dao = cross(ao, edgeAB);
 
           float v = dot(r.direction, dao) * invDet;
-          if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
+          if (v < 0.0 || u + v > 1.0) continue;
 
           float dist = dot(edgeAC, dao) * invDet;
 
@@ -213,7 +211,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
       rec.material.albedo = color * 0.5;
     }
     rec.material.ID = 0;
-    rec.material.refractive_index = 1.33;
+    rec.material.refractive_index = 1.5;
     rec.material.emission = vec4(0.0);
   }
 
@@ -281,13 +279,15 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
     }
   }
 
-  // if (u_numTriangles > 0) {
-  //   if (hit_3d_model(r, vec2(ray_t.x, closest), temp_rec)) {
-  //     hit_anything = true;
-  //     closest = temp_rec.t;
-  //     rec = temp_rec;
-  //   }
-  // }
+  #ifdef RENDER_3D_MODELS
+  if (u_numTriangles > 0) {
+    if (hit_3d_model(r, vec2(ray_t.x, closest), temp_rec)) {
+      hit_anything = true;
+      closest = temp_rec.t;
+      rec = temp_rec;
+    }
+  }
+  #endif
 
   return hit_anything;
 }
@@ -295,15 +295,11 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
 //==========SHADOW RAY HIT FUNCTIONS==========//
 
 bool shadow_hit_3d_model(ray r, vec2 ray_t) {
-  if (u_mode == 0) {
-    return false;
-  }
-
   int stack[16];
   int stackPtr = 0;
 
   stack[stackPtr++] = 0;
-
+  vec3 invRayDir = 1 / r.direction;
   while (stackPtr > 0) {
     int nodeIdx = stack[--stackPtr];
 
@@ -312,7 +308,7 @@ bool shadow_hit_3d_model(ray r, vec2 ray_t) {
     vec3 aabbMax = fetchModelData(nodeDataIndex + 1);
     vec3 data = fetchModelData(nodeDataIndex + 2);
 
-    float aabb_dist = hit_aabb_dist(r, aabbMin, aabbMax, ray_t);
+    float aabb_dist = hit_aabb_dist(r, invRayDir, aabbMin, aabbMax, ray_t);
     if (aabb_dist < 0.0) continue;
 
     int leftChild = int(data.x);
@@ -341,7 +337,7 @@ bool shadow_hit_3d_model(ray r, vec2 ray_t) {
         vec3 dao = cross(ao, edgeAB);
 
         float v = dot(r.direction, dao) * invDet;
-        if (v < 0.0 || u + v > 1.0 || v > 1.0) continue;
+        if (v < 0.0 || u + v > 1.0) continue;
 
         float dist = dot(edgeAC, dao) * invDet;
 
@@ -384,21 +380,22 @@ bool shadow_hit_world(ray r, vec2 ray_t) {
     if (shadow_hit_sphere(r, spheres[i], ray_t))
       return true;
   }
-  // for (int i = 0; i < cornellBox.length(); i++) {
-  //   plane p = cornellBox[i];
-  //   if (dot(r.direction, p.normal) < 0) {
-  //     float t = dot(p.origin - r.origin, -p.normal) / dot(r.direction, -p.normal);
-  //     if (t > ray_t.x && t < ray_t.y)
-  //       return true;
-  //   }
-  // }
-  //
+  for (int i = 0; i < cornellBox.length(); i++) {
+    plane p = cornellBox[i];
+    if (dot(r.direction, p.normal) < 0) {
+      float t = dot(p.origin - r.origin, -p.normal) / dot(r.direction, -p.normal);
+      if (t > ray_t.x && t < ray_t.y)
+        return true;
+    }
+  }
 
-  // if (u_numTriangles > 0) {
-  //   if (shadow_hit_3d_model(r, ray_t)) {
-  //     return true;
-  //   }
-  // }
+  #ifdef RENDER_3D_MODELS
+  if (u_numTriangles > 0) {
+    if (shadow_hit_3d_model(r, ray_t)) {
+      return true;
+    }
+  }
+  #endif
   return false;
 }
 
@@ -413,6 +410,7 @@ vec3 ray_color(ray r) {
   for (int i = 0; i < MAX_BOUNCES; i++) {
     hit_record rec;
     if (hit_world(r, vec2(0.001, 10000), rec)) {
+      //---------Lambertian material---------//
       if (rec.material.ID == 0) {
         if (dot(r.direction, rec.normal) > 0)
           break;
@@ -424,46 +422,59 @@ vec3 ray_color(ray r) {
           color *= rec.material.albedo;
           continue;
         }
+
         sphere light = spheres[0]; //sphere(sun.xyz, sun.w, material(0, vec3(1), vec4(1)));
-        ray shadow_ray = ray(rec.p, normalize(light.center + random_in_unit_sphere() * light.radius - rec.p));
+        vec3 light_point = light.center + random_on_unit_sphere() * light.radius;
+        vec3 to_light = light_point - rec.p;
+        float to_light_len_sq = to_light.x * to_light.x + to_light.y * to_light.y + to_light.z * to_light.z;
+        ray shadow_ray = ray(rec.p, normalize(to_light));
 
         if (!shadow_hit_world(shadow_ray, vec2(0.001, length(light.center - rec.p) - light.radius - 0.001))) {
           float NdotL = max(dot(rec.normal, shadow_ray.direction), 0.0);
-          incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.material.albedo * NdotL * color;
+          float G = abs(dot(-to_light, (light_point - light.center) / light.radius)) / to_light_len_sq;
+          incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.material.albedo * NdotL * color * G;
         }
-        vec3 scatter_direction = rec.normal + random_in_unit_sphere();
+        vec3 scatter_direction = 1.001 * rec.normal + random_on_unit_sphere();
 
         r = ray(rec.p, normalize(scatter_direction));
-      } else if (rec.material.ID == 1) {
+      }
+      //----------Metal---------//
+      else if (rec.material.ID == 1) {
         vec3 reflected = reflect(r.direction, rec.normal);
         r = ray(rec.p, reflected);
-      } else if (rec.material.ID == 2) {
+      }
+      //-----------Glass----------//
+      else if (rec.material.ID == 2) {
         if (MAX_BOUNCES < 10) MAX_BOUNCES++;
-        float n = rec.material.refractive_index;
-        float cos_a = dot(r.direction, rec.normal);
-        float sin_sq_a = 1 - cos_a * cos_a;
-        if (cos_a <= 0) {
-          float k = sqrt(n * n - sin_sq_a);
 
-          vec3 direction = (r.direction + rec.normal * (cos_a - k)) / k;
-          r = ray(rec.p, normalize(direction));
+        float n = rec.material.refractive_index;
+        float cos_theta = dot(r.direction, rec.normal); //angle of incidence
+        if (cos_theta <= 0.0) { //ray comming from air
+          float r0 = (1.0 - n) / (1.0 + n);
+          r0 *= r0;
+          float reflect_chance = r0 + (1.0 - r0) * pow(1.0 + cos_theta, 5.0);
+          if (reflect_chance > random()) {
+            r = ray(rec.p, reflect(r.direction, rec.normal));
+          }
+          else {
+            r = ray(rec.p, refract(r.direction, rec.normal, 1 / n));
+          }
         } else {
-          if (sin_sq_a >= 1 / n / n) {
-            vec3 reflected = reflect(r.direction, -rec.normal);
-            r = ray(rec.p, reflected);
+          float sin_sq_theta = 1 - cos_theta * cos_theta;
+          if (sin_sq_theta >= 1.0 / (n * n)) {
+            r = ray(rec.p, reflect(r.direction, -rec.normal));
           } else {
-            float k = sqrt(n * n - sin_sq_a);
-            vec3 direction = r.direction * k - rec.normal * (cos_a - k);
-            r = ray(rec.p, normalize(direction));
+            vec3 refracted = refract(r.direction, -rec.normal, n);
+            r = ray(rec.p, refracted);
           }
         }
       }
+      //----------General----------//
       incoming_light += rec.material.emission.xyz * rec.material.emission.w * color;
       color *= rec.material.albedo;
     }
     else {
-      vec3 unit_direction = r.direction;
-      float a = 0.5 * (unit_direction.y + 1.0);
+      float a = 0.5 * (r.direction.y + 1.0);
       incoming_light += 0.5 * color * ((1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0));
       break;
     }
@@ -485,22 +496,18 @@ void main()
   float fov = radians(90.0f);
   float flocal_length = 1.0 / tan(fov / 2.0);
 
-  int SAMPLES_PER_PIXEL = 1;
   vec3 pixel_color = vec3(0.0);
 
-  for (int s = 0; s < SAMPLES_PER_PIXEL; s++) {
-    float u = ((gl_FragCoord.x - 0.5 + random()) / u_resolution.x) * 2.0 - 1.0;
-    float v = ((gl_FragCoord.y - 0.5 + random()) / u_resolution.y) * 2.0 - 1.0;
+  float u = ((gl_FragCoord.x - 0.5 + random()) / u_resolution.x) * 2.0 - 1.0;
+  float v = ((gl_FragCoord.y - 0.5 + random()) / u_resolution.y) * 2.0 - 1.0;
 
-    u *= aspect_ratio;
+  u *= aspect_ratio;
 
-    vec3 direction = normalize(u * u_camRight + v * u_camUp + flocal_length * u_camFront);
+  vec3 direction = normalize(u * u_camRight + v * u_camUp + flocal_length * u_camFront);
 
-    ray r = ray(origin, direction);
-    pixel_color += ray_color(r);
-  }
+  ray r = ray(origin, direction);
+  pixel_color += ray_color(r);
 
-  pixel_color /= float(SAMPLES_PER_PIXEL);
   vec3 prevColor = texture(accumTexture, uv).rgb;
 
   vec3 finalColor = (prevColor * float(u_frame) + pixel_color) / float(u_frame + 1);

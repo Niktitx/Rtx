@@ -32,18 +32,6 @@ void getEvent(sf::RenderWindow &window) {
         mode = 2;
         CameraPos.y += 0.00001f;
         break;
-      case sf::Keyboard::Scancode::Num3:
-        mode = 3;
-        CameraPos.y += 0.00001f;
-        break;
-      case sf::Keyboard::Scancode::Num4:
-        mode = 4;
-        CameraPos.y += 0.00001f;
-        break;
-      case sf::Keyboard::Scancode::Num5:
-        mode = 5;
-        CameraPos.y += 0.00001f;
-        break;
       case sf::Keyboard::Scancode::R:
         CameraPos = sf::Vector3f(0, 0, 0);
         yaw = -90;

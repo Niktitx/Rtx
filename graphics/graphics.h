@@ -11,6 +11,11 @@ inline uint modelTexture;
 inline GLuint accumTextures[2];
 inline GLuint fbos[2];
 
+inline sf::Shader ray_tracer_simple;
+inline sf::Shader ray_tracer;
+inline sf::Shader *current_ray_tracer = nullptr;
+inline sf::Shader to_gamma;
+
 int initialize();
 void render();
 void clearScreen();
