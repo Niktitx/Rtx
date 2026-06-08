@@ -15,10 +15,14 @@ uniform int u_frame;
 uniform int u_mode;
 uniform int u_seed;
 
+uniform sampler2D u_texture;
+
 uint seed;
 out vec4 FragColor;
 
 //==========DATA OPERATING AND MATH FUNCTIONS==========//
+
+const float PI = 3.14159265359;
 
 uint pcg_hash(uint x) {
   x = x * 747796405u + 2891336453u;
@@ -29,7 +33,7 @@ uint pcg_hash(uint x) {
 
 float random() {
   seed = pcg_hash(seed);
-  return float(seed) / 4294967295.0;
+  return uintBitsToFloat((seed >> 9u) | 0x3F800000u) - 1.0;
 }
 
 vec3 fetchModelData(int index) {
@@ -39,7 +43,7 @@ vec3 fetchModelData(int index) {
 }
 
 vec3 random_on_unit_sphere() {
-  float a = random() * 2.0 * 3.141592;
+  float a = random() * 2.0 * PI;
   float z = random() * 2.0 - 1;
   float r = sqrt(1.0 - z * z);
   return vec3(r * cos(a), r * sin(a), z);
@@ -53,7 +57,8 @@ struct ray {
 };
 
 struct material {
-  int ID; // 0 - Lambertian, 1 - metal, 2 - Glass
+  int ID; // 0 - Lambertian, 1 - Metal, 2 - Glass
+  int textureID;
   vec3 albedo;
   vec4 emission; //r, g, b and emission power
   float refractive_index;
@@ -80,20 +85,20 @@ struct plane {
 };
 
 const sphere spheres[5] = sphere[](
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, vec3(1), vec4(1, 1, 1, 1), 1, 0)),
-    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1, 0)),
-    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, vec3(1), vec4(0), 1.5, 0)),
-    sphere(vec3(1, 0.0, -1.0), 0.5, material(0, vec3(0.3, 0.7, 0.3), vec4(0), 1, 0)),
-    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1, 0))
+    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, 0, vec3(1), vec4(1, 1, 1, 2), 1, 0)),
+    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, 0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1, 0)),
+    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, 0, vec3(1), vec4(0), 1.5, 0)),
+    sphere(vec3(1, 0.0, -1.0), 0.5, material(0, 1, vec3(0.3, 0.7, 0.3), vec4(0), 1, 0)),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, 0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1, 0))
   );
 
 const plane cornellBox[6] = plane[](
-    plane(vec3(0, 2, 0), vec3(0, -1, 0), material(0, vec3(1), vec4(0), 1, 0)),
-    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(0, vec3(1), vec4(0), 1, 0)),
-    plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(0, vec3(0.1, 0.8, 0.1), vec4(0), 1, 0)),
-    plane(vec3(2.5, 2, 0), vec3(-1, 0, 0), material(0, vec3(0.8, 0.1, 0.1), vec4(0), 1, 0)),
-    plane(vec3(0, 0, -3), vec3(0, 0, 1), material(0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0)),
-    plane(vec3(0, 0, 1), vec3(0, 0, -1), material(0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0))
+    plane(vec3(0, 2, 0), vec3(0, -1, 0), material(0, 0, vec3(1), vec4(0), 1, 0)),
+    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(0, 0, vec3(1), vec4(0), 1, 0)),
+    plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(0, 0, vec3(0.1, 0.8, 0.1), vec4(0), 1, 0)),
+    plane(vec3(2.5, 2, 0), vec3(-1, 0, 0), material(0, 0, vec3(0.8, 0.1, 0.1), vec4(0), 1, 0)),
+    plane(vec3(0, 0, -3), vec3(0, 0, 1), material(0, 0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0)),
+    plane(vec3(0, 0, 1), vec3(0, 0, -1), material(0, 0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0))
   );
 
 //==========RAY HIT FUNCTIONS==========//
@@ -119,7 +124,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   float closest = ray_t.y;
   int closest_base_index = -1;
 
-  int stack[16];
+  int stack[12];
   int stackPtr = 0;
 
   stack[stackPtr++] = 0;
@@ -189,7 +194,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
       }
     } else {
       int rightChild = int(data.y);
-      if (stackPtr >= 14) break;
+      if (stackPtr >= 10) break;
       stack[stackPtr++] = leftChild;
       stack[stackPtr++] = rightChild;
     }
@@ -239,6 +244,15 @@ bool hit_sphere(ray r, sphere s, vec2 ray_t, out hit_record rec) {
   rec.p = r.origin + rec.t * r.direction;
   rec.normal = (rec.p - s.center) / s.radius;
   rec.material = s.mat;
+  if (rec.material.textureID != 0) {
+    vec3 localPos = normalize(rec.p - s.center);
+    float phi = atan(-localPos.z, localPos.x) + PI;
+    float theta = acos(-localPos.y);
+
+    vec2 uv = vec2(phi / (2.0 * PI), theta / PI);
+
+    rec.material.albedo = texture(u_texture, uv).rgb;
+  }
   return true;
 }
 
@@ -401,8 +415,6 @@ bool shadow_hit_world(ray r, vec2 ray_t) {
 
 //==========RAY BOUNCING FUNCTION==========//
 
-//sphere sun(vec3(-500, 400, -300), 100, material(0, vec3(1), vec4(1), 0));
-
 vec3 ray_color(ray r) {
   vec3 color = vec3(1.0);
   vec3 incoming_light = vec3(0);
@@ -423,7 +435,7 @@ vec3 ray_color(ray r) {
           continue;
         }
 
-        sphere light = spheres[0]; //sphere(sun.xyz, sun.w, material(0, vec3(1), vec4(1)));
+        sphere light = spheres[0];
         vec3 light_point = light.center + random_on_unit_sphere() * light.radius;
         vec3 to_light = light_point - rec.p;
         float to_light_len_sq = to_light.x * to_light.x + to_light.y * to_light.y + to_light.z * to_light.z;
@@ -493,8 +505,8 @@ void main()
 
   vec3 origin = u_cameraPos;
 
-  float fov = radians(90.0f);
-  float flocal_length = 1.0 / tan(fov / 2.0);
+  const float fov = radians(90.0f);
+  const float flocal_length = 1.0 / tan(fov / 2.0);
 
   vec3 pixel_color = vec3(0.0);
 

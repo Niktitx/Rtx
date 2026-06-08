@@ -5,6 +5,47 @@
 #include <sstream>
 #include <string>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../third_party/stb_image.h"
+
+unsigned int loadTexture(const char *path) {
+  unsigned int textureID;
+  glGenTextures(1, &textureID);
+  int width, height, nrComponents;
+
+  stbi_set_flip_vertically_on_load(true);
+
+  unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+  if (data) {
+    GLenum format;
+    if (nrComponents == 1)
+      format = GL_RED;
+    else if (nrComponents == 3)
+      format = GL_RGB;
+    else if (nrComponents == 4)
+      format = GL_RGBA;
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+                 GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+  } else {
+    std::cerr << "Failed to load texture: " << path << std::endl;
+    stbi_image_free(data);
+  }
+
+  return textureID;
+}
+
 static std::string readFile(const std::string &path) {
   std::ifstream file(path);
   if (!file.is_open()) {
@@ -72,6 +113,10 @@ int initialize() {
     return -1;
   }
 
+  imageTexture = loadTexture("../build/texture.jpg");
+  ray_tracer_simple.setUniform("u_texture", 2);
+  ray_tracer.setUniform("u_texture", 2);
+
   window.setMouseCursorVisible(false);
 
   to_gamma.setUniform("u_resolution", sf::Glsl::Vec2(WIDTH, HEIGHT));
@@ -120,6 +165,9 @@ void render() {
 
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, modelTexture);
+
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, imageTexture);
 
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[nextBuffer]);
   glViewport(0, 0, WIDTH, HEIGHT);

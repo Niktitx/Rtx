@@ -7,6 +7,7 @@ inline int current_buffer = 0;
 inline GLuint emptyVAO;
 
 inline uint modelTexture;
+inline uint imageTexture;
 
 inline GLuint accumTextures[2];
 inline GLuint fbos[2];

@@ -47,7 +47,7 @@ float getAxisCoord(const sf::Vector3f &v, int axis) {
 void subDivide(int nodeIdx) {
   BVHNode &node = bvhNodes[nodeIdx];
 
-  if (node.triCount <= 20) {
+  if (node.triCount <= 12) {
     node.leftChild = -1;
     return;
   }
