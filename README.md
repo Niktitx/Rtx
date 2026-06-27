@@ -1,11 +1,106 @@
-# Ray Tracing
-A ray tracing 3D engine, that can draw spheres and triangles.
-3D models supported
+# Ray Tracer
 
-Usage:
-  `mkdir build`
-  `cd build`
-  `cmake ..`
-  `make`
-  `./rtx`
-<img width="3840" height="2160" alt="image" src="https://github.com/user-attachments/assets/0aab9544-35cb-4b21-a325-a09167a17df3" />
+A physically based CPU/GPU ray tracer written in C++ and OpenGL (GLSL).
+
+The renderer supports Monte Carlo path tracing with physically based materials, importance sampling, BVH acceleration, textured meshes and progressive accumulation.
+
+![Render](images/render.png)
+
+---
+
+## Features
+
+- Physically Based Rendering (PBR)
+- Monte Carlo path tracing
+- Multiple Importance Sampling (MIS)
+- Next Event Estimation (NEE)
+- GGX microfacet BRDF
+- VNDF importance sampling
+- Metallic / Roughness workflow
+- Lambertian, metallic and dielectric materials
+- HDR sky illumination
+- Sphere lights
+- Progressive accumulation
+- Bounding Volume Hierarchy (BVH)
+- Triangle mesh rendering
+- OBJ model loading
+- Texture mapping
+- Normal mapping
+- Glass rendering
+
+---
+
+#Metallic and lambertian materials
+![](images/metals.png)
+
+---
+
+## Build
+
+Requirements:
+
+- C++17
+- OpenGL 3.3+
+- CMake
+- GLFW
+- GLAD
+
+Clone the repository
+
+```bash
+git clone https://github.com/username/ray-tracer.git
+cd ray-tracer
+```
+
+Build
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+Run
+
+```bash
+./rtx
+```
+
+---
+
+## Implemented techniques
+
+- Path tracing
+- Direct light sampling
+- Multiple Importance Sampling
+- GGX BRDF
+- Smith masking-shadowing
+- Schlick Fresnel approximation
+- Cosine-weighted hemisphere sampling
+- Visible Normal Distribution Function (VNDF) sampling
+- Russian roulette termination (planned)
+
+---
+
+## Project structure
+
+```
+src/
+    Renderer/
+    Scene/
+    BVH/
+    ModelLoader/
+    Shaders/
+assets/
+models/
+textures/
+```
+
+
+---
+
+## License
+
+MIT License.
+
