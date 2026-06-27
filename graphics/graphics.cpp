@@ -113,9 +113,13 @@ int initialize() {
     return -1;
   }
 
-  imageTexture = loadTexture("../build/texture.jpg");
+  imageTexture = loadTexture("../build/texture.png");
   ray_tracer_simple.setUniform("u_texture", 2);
   ray_tracer.setUniform("u_texture", 2);
+
+  normalTexture = loadTexture("../build/normal.png");
+  ray_tracer_simple.setUniform("u_normal_texture", 3);
+  ray_tracer.setUniform("u_normal_texture", 3);
 
   window.setMouseCursorVisible(false);
 
@@ -168,6 +172,9 @@ void render() {
 
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, imageTexture);
+
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, normalTexture);
 
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[nextBuffer]);
   glViewport(0, 0, WIDTH, HEIGHT);

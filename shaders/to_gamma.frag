@@ -14,7 +14,7 @@ void main()
   vec3 colorSum = vec3(0.0);
   float weightSum = 0.0;
 
-  float colorThreshold = 0.1; //
+  float colorThreshold = 0.2;
 
   for (int x = -2; x <= 2; x++)
   {

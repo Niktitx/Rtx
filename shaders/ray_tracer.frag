@@ -16,13 +16,20 @@ uniform int u_mode;
 uniform int u_seed;
 
 uniform sampler2D u_texture;
+uniform sampler2D u_normal_texture;
 
 uint seed;
 out vec4 FragColor;
 
-//==========DATA OPERATING AND MATH FUNCTIONS==========//
+//=====================================================//
+//          DATA OPERATING AND MATH FUNCTIONS          //
+//=====================================================//
 
 const float PI = 3.14159265359;
+const float EPS_RAY = 1e-4;
+const float EPS_PDF = 1e-8;
+const float EPS_D = 1e-20;
+const float MIN_ROUGHNESS = 0.02;
 
 uint pcg_hash(uint x) {
   x = x * 747796405u + 2891336453u;
@@ -49,7 +56,32 @@ vec3 random_on_unit_sphere() {
   return vec3(r * cos(a), r * sin(a), z);
 }
 
-//==========STRUCTURES==========//
+vec3 makeTangent(vec3 N) {
+  vec3 up = abs(N.y) < 0.999 ? vec3(0, 1, 0) : vec3(1, 0, 0);
+  return normalize(cross(up, N));
+}
+
+float alphaFromRoughness(float roughness) {
+  float r = max(roughness, MIN_ROUGHNESS);
+  return r * r;
+}
+
+bool makeHalfVector(vec3 V, vec3 L, out vec3 H) {
+  vec3 s = V + L;
+  float len2 = dot(s, s);
+
+  if (len2 < 1e-12) {
+    H = vec3(0.0);
+    return false;
+  }
+
+  H = s * inversesqrt(len2);
+  return true;
+}
+
+//==============================//
+//          STRUCTURES          //
+//==============================//
 
 struct ray {
   vec3 origin;
@@ -60,9 +92,10 @@ struct material {
   int ID; // 0 - Lambertian, 1 - Metal, 2 - Glass
   int textureID;
   vec3 albedo;
+  float metallic;
+  float roughness;
   vec4 emission; //r, g, b and emission power
   float refractive_index;
-  float reflection_chance;
 };
 
 struct hit_record {
@@ -84,24 +117,64 @@ struct plane {
   material mat;
 };
 
-const sphere spheres[5] = sphere[](
-    sphere(vec3(0.5, 2.0, 0.0), 0.5, material(0, 0, vec3(1), vec4(1, 1, 1, 2), 1, 0)),
-    sphere(vec3(1.5, 0.0, -2.0), 0.5, material(0, 0, vec3(0.8, 0.3, 0.3), vec4(0.8, 0.3, 0.3, 0), 1, 0)),
-    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(2, 0, vec3(1), vec4(0), 1.5, 0)),
-    sphere(vec3(1, 0.0, -1.0), 0.5, material(0, 1, vec3(0.3, 0.7, 0.3), vec4(0), 1, 0)),
-    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(0, 0, vec3(0.3, 0.3, 0.7), vec4(0.0), 1, 0))
+const vec3 white = vec3(1);
+const vec3 red = vec3(0.8, 0.1, 0.1);
+const vec3 green = vec3(0.1, 0.8, 0.1);
+const vec3 blue = vec3(0.1, 0.1, 0.8);
+
+#define Lambertian 0
+#define Glass 1
+
+const sphere spheres[26] = sphere[](
+    sphere(vec3(0, 3, 0), 0.5, material(Lambertian, 0, white, 0, 1.0, vec4(1, 1, 1, 10), 1)),
+    // sphere(vec3(1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, red, 0.4, 1.0, vec4(0), 1)),
+    //sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(Glass, 0, white, 0, 1.0, vec4(0), 1.5)),
+    // sphere(vec3(1, 0.0, -1.0), 0.5, material(Lambertian, 0, green, 0, 1, vec4(0), 1)),
+    // sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, blue, 0.9, 1, vec4(0.0), 1))
+
+    sphere(vec3(-2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 1, 1, vec4(0.0), 1)),
+    sphere(vec3(-1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.75, 1, vec4(0.0), 1)),
+    sphere(vec3(0, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.5, 1, vec4(0.0), 1)),
+    sphere(vec3(1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.25, 1, vec4(0.0), 1)),
+    sphere(vec3(2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0, 1, vec4(0.0), 1)),
+
+    sphere(vec3(-2, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 1, 0.75, vec4(0.0), 1)),
+    sphere(vec3(-1, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.75, 0.75, vec4(0.0), 1)),
+    sphere(vec3(0, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.5, 0.75, vec4(0.0), 1)),
+    sphere(vec3(1, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.25, 0.75, vec4(0.0), 1)),
+    sphere(vec3(2, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0, 0.75, vec4(0.0), 1)),
+
+    sphere(vec3(-2, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 1, 0.5, vec4(0.0), 1)),
+    sphere(vec3(-1, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.75, 0.5, vec4(0.0), 1)),
+    sphere(vec3(0, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.5, 0.5, vec4(0.0), 1)),
+    sphere(vec3(1, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.25, 0.5, vec4(0.0), 1)),
+    sphere(vec3(2, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0, 0.5, vec4(0.0), 1)),
+
+    sphere(vec3(-2, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 1, 0.25, vec4(0.0), 1)),
+    sphere(vec3(-1, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.75, 0.25, vec4(0.0), 1)),
+    sphere(vec3(0, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.5, 0.25, vec4(0.0), 1)),
+    sphere(vec3(1, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.25, 0.25, vec4(0.0), 1)),
+    sphere(vec3(2, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0, 0.25, vec4(0.0), 1)),
+
+    sphere(vec3(-2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 1, 0, vec4(0.0), 1)),
+    sphere(vec3(-1, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.75, 0, vec4(0.0), 1)),
+    sphere(vec3(0, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.5, 0, vec4(0.0), 1)),
+    sphere(vec3(1, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.25, 0, vec4(0.0), 1)),
+    sphere(vec3(2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0, 0, vec4(0.0), 1))
   );
 
-const plane cornellBox[6] = plane[](
-    plane(vec3(0, 2, 0), vec3(0, -1, 0), material(0, 0, vec3(1), vec4(0), 1, 0)),
-    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(0, 0, vec3(1), vec4(0), 1, 0)),
-    plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(0, 0, vec3(0.1, 0.8, 0.1), vec4(0), 1, 0)),
-    plane(vec3(2.5, 2, 0), vec3(-1, 0, 0), material(0, 0, vec3(0.8, 0.1, 0.1), vec4(0), 1, 0)),
-    plane(vec3(0, 0, -3), vec3(0, 0, 1), material(0, 0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0)),
-    plane(vec3(0, 0, 1), vec3(0, 0, -1), material(0, 0, vec3(0.1, 0.1, 0.8), vec4(0), 1, 0))
+const plane cornellBox[1] = plane[](
+    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(Lambertian, 0, white, 0, 1.0, vec4(0), 1))
+  // plane(vec3(0, 3, 0), vec3(0, -1, 0), material(Lambertian, 0, white, 0, 1.0, vec4(0), 1)),
+  // plane(vec3(-3.5, 0, 0), vec3(1, 0, 0), material(Lambertian, 0, green, 0, 1.0, vec4(0), 1)),
+  // plane(vec3(3.5, 0, 0), vec3(-1, 0, 0), material(Lambertian, 0, red, 0, 1.0, vec4(0), 1)),
+  // plane(vec3(0, 0, -4), vec3(0, 0, 1), material(Lambertian, 0, blue, 0, 1.0, vec4(0), 1)),
+  // plane(vec3(0, 0, 3), vec3(0, 0, -1), material(Lambertian, 0, white, 0, 1, vec4(0), 1))
   );
 
-//==========RAY HIT FUNCTIONS==========//
+//=====================================//
+//          RAY HIT FUNCTIONS          //
+//=====================================//
 
 //vector2 ray_t is an interval in which collision will be detected. x is minimum distance from ray origin and y is maximum
 
@@ -124,7 +197,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   float closest = ray_t.y;
   int closest_base_index = -1;
 
-  int stack[12];
+  int stack[16];
   int stackPtr = 0;
 
   stack[stackPtr++] = 0;
@@ -134,12 +207,12 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
   while (stackPtr > 0) {
     int nodeIdx = stack[--stackPtr];
 
-    int nodeDataIndex = u_bvhDataOffset + nodeIdx * 3; //fetching data of specific triangle
+    int nodeDataIndex = u_bvhDataOffset + nodeIdx * 3; //fetching data of specific node
     vec3 aabbMin = fetchModelData(nodeDataIndex + 0);
     vec3 aabbMax = fetchModelData(nodeDataIndex + 1);
     vec3 data = fetchModelData(nodeDataIndex + 2);
 
-    float aabb_dist = hit_aabb_dist(r, invRayDir, aabbMin, aabbMax, vec2(0.001, closest));
+    float aabb_dist = hit_aabb_dist(r, invRayDir, aabbMin, aabbMax, vec2(EPS_RAY, closest));
     if (aabb_dist < 0.0) continue;
 
     int leftChild = int(data.x);
@@ -194,7 +267,7 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
       }
     } else {
       int rightChild = int(data.y);
-      if (stackPtr >= 10) break;
+      if (stackPtr >= 14) break;
       stack[stackPtr++] = leftChild;
       stack[stackPtr++] = rightChild;
     }
@@ -208,13 +281,8 @@ bool hit_3d_model(ray r, vec2 ray_t, out hit_record rec) {
 
     rec.t = closest;
     rec.p = r.origin + r.direction * closest;
-    rec.normal = normalize((determinant > 0.0) ? normal : -normal);
-    if ((int(rec.p.x * 10) + int(rec.p.z * 10)) % 2 == 0 && color == vec3(1)) {
-      rec.material.albedo = color;
-    }
-    else {
-      rec.material.albedo = color * 0.5;
-    }
+    rec.normal = (determinant > 0.0) ? normal : -normal;
+    rec.material.albedo = color;
     rec.material.ID = 0;
     rec.material.refractive_index = 1.5;
     rec.material.emission = vec4(0.0);
@@ -246,30 +314,47 @@ bool hit_sphere(ray r, sphere s, vec2 ray_t, out hit_record rec) {
   rec.material = s.mat;
   if (rec.material.textureID != 0) {
     vec3 localPos = normalize(rec.p - s.center);
-    float phi = atan(-localPos.z, localPos.x) + PI;
+    float phi = -atan(localPos.z, localPos.x);
     float theta = acos(-localPos.y);
 
-    vec2 uv = vec2(phi / (2.0 * PI), theta / PI);
+    vec2 uv = vec2((phi + PI) / (2 * PI), theta / PI);
 
     rec.material.albedo = texture(u_texture, uv).rgb;
+    vec3 local_normal = texture(u_normal_texture, uv).rgb * 2 - vec3(1);
+    local_normal.z = sqrt(1 - dot(local_normal.xy, local_normal.xy));
+    vec3 N = rec.normal;
+
+    vec3 up = abs(N.y) > 0.999 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0);
+    vec3 T = normalize(cross(up, N));
+    rec.normal = local_normal.x * T + local_normal.y * cross(N, T) + local_normal.z * N;
+    rec.normal = normalize(rec.normal);
   }
   return true;
 }
 
 bool hit_plane(ray r, plane p, vec2 ray_t, out hit_record rec) {
-  if (dot(r.direction, p.normal) < 0) {
-    rec.t = dot(p.origin - r.origin, -p.normal) / dot(r.direction, -p.normal);
-    if (rec.t < ray_t.x || rec.t > ray_t.y)
-      return false;
-    rec.p = r.origin + rec.t * r.direction;
-    rec.normal = p.normal;
-    rec.material = p.mat;
-    if ((int(rec.p.x * 10) + int(rec.p.z * 10)) % 2 == 0 && p.mat.albedo == vec3(1)) {
-      rec.material.albedo = vec3(0.5);
-    }
-    return true;
+  float denom = dot(r.direction, p.normal);
+
+  if (abs(denom) < 1e-6)
+    return false;
+
+  float t = dot(p.origin - r.origin, p.normal) / denom;
+
+  if (t < ray_t.x || t > ray_t.y)
+    return false;
+
+  rec.t = t;
+  rec.p = r.origin + t * r.direction;
+  rec.normal = denom < 0.0 ? p.normal : -p.normal;
+  rec.material = p.mat;
+
+  float checker = mod(floor(rec.p.x * 10.0) + floor(rec.p.z * 10.0), 2.0);
+
+  if (checker == 0.0 && p.mat.albedo == vec3(1.0) && rec.normal == vec3(0.0, 1.0, 0.0)) {
+    rec.material.albedo = vec3(0.5);
   }
-  return false;
+
+  return true;
 }
 
 bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
@@ -306,7 +391,9 @@ bool hit_world(ray r, vec2 ray_t, out hit_record rec) {
   return hit_anything;
 }
 
-//==========SHADOW RAY HIT FUNCTIONS==========//
+//============================================//
+//          SHADOW RAY HIT FUNCTIONS          //
+//============================================//
 
 bool shadow_hit_3d_model(ray r, vec2 ray_t) {
   int stack[16];
@@ -389,18 +476,23 @@ bool shadow_hit_sphere(ray r, sphere s, vec2 ray_t) {
   return true;
 }
 
-bool shadow_hit_world(ray r, vec2 ray_t) {
+bool shadow_hit_world(ray r, vec2 ray_t, int light) {
   for (int i = 0; i < spheres.length(); i++) {
+    if (i == light) continue;
     if (shadow_hit_sphere(r, spheres[i], ray_t))
       return true;
   }
   for (int i = 0; i < cornellBox.length(); i++) {
     plane p = cornellBox[i];
-    if (dot(r.direction, p.normal) < 0) {
-      float t = dot(p.origin - r.origin, -p.normal) / dot(r.direction, -p.normal);
-      if (t > ray_t.x && t < ray_t.y)
-        return true;
-    }
+
+    float denom = dot(r.direction, p.normal);
+    if (abs(denom) < 1e-6)
+      continue;
+
+    float t = dot(p.origin - r.origin, p.normal) / denom;
+
+    if (t > ray_t.x && t < ray_t.y)
+      return true;
   }
 
   #ifdef RENDER_3D_MODELS
@@ -413,50 +505,265 @@ bool shadow_hit_world(ray r, vec2 ray_t) {
   return false;
 }
 
-//==========RAY BOUNCING FUNCTION==========//
+//==================================//
+//          BRDF FUNCTION           //
+//==================================//
+
+float D_GGX(float NdotH, float roughness) {
+  float alpha2 = alphaFromRoughness(roughness);
+
+  NdotH = clamp(NdotH, 0.0, 1.0);
+  float denom = NdotH * NdotH * (alpha2 - 1.0) + 1.0;
+  return alpha2 / max(PI * denom * denom, EPS_D);
+}
+
+vec3 Fresnel_Schlick(float cos_theta, vec3 F0) {
+  return F0 + (1.0 - F0) * pow(1.0 - cos_theta, 5.0);
+}
+
+float G1_Smith(float NdotV, float roughness) {
+  if (NdotV <= 0) return 0;
+  float alpha = alphaFromRoughness(roughness);
+  float alpha2 = alpha * alpha;
+  float NdotV2 = NdotV * NdotV;
+
+  return 2.0 * NdotV / max(NdotV + sqrt(alpha2 + (1.0 - alpha2) * NdotV2), EPS_PDF);
+}
+
+float G_Smith(float NdotV, float NdotL, float roughness) {
+  return G1_Smith(NdotV, roughness) * G1_Smith(NdotL, roughness);
+}
+
+vec3 BRDF(vec3 V, vec3 L, vec3 N, vec3 albedo, float metallic, float roughness) {
+  vec3 H = vec3(0);
+  makeHalfVector(V, L, H);
+  float NdotV = max(dot(N, V), 0.0);
+  float NdotL = max(dot(N, L), 0.0);
+  float NdotH = max(dot(N, H), 0.0);
+
+  vec3 F0 = mix(vec3(0.04), albedo, metallic);
+  vec3 F = Fresnel_Schlick(max(dot(H, V), 0.0), F0);
+  float D = D_GGX(NdotH, roughness);
+  float G = G_Smith(NdotV, NdotL, roughness);
+
+  vec3 numerator = D * G * F;
+  float denomenator = 4.0 * max(NdotV, 0.001) * max(NdotL, 0.001);
+  vec3 specularBRDF = numerator / denomenator;
+
+  vec3 kD = vec3(1.0) - F; //fraction of light that penetrates the material
+  kD *= 1.0 - metallic;
+
+  vec3 diffuseBRDF = albedo / PI;
+
+  return kD * diffuseBRDF + specularBRDF;
+}
+
+vec3 sampleVNDF_local(vec3 V_local, float roughness) {
+  float alpha = alphaFromRoughness(roughness);
+  vec3 Vh = normalize(vec3(alpha * V_local.x, alpha * V_local.y, V_local.z));
+
+  float lensq = Vh.x * Vh.x + Vh.y * Vh.y;
+  vec3 T1 = lensq > 0.0 ? vec3(-Vh.y, Vh.x, 0.0) * inversesqrt(lensq) : vec3(1, 0, 0);
+  vec3 T2 = cross(Vh, T1);
+  float r = sqrt(random());
+  float phi = 2 * PI * random();
+  float t1 = r * cos(phi);
+  float t2 = r * sin(phi);
+  float s = 0.5 * (1 + Vh.z);
+
+  t2 = mix(sqrt(1 - t1 * t1), t2, s);
+
+  vec3 Nh = t1 * T1 + t2 * T2 + sqrt(max(0, 1 - t1 * t1 - t2 * t2)) * Vh;
+  return normalize(vec3(alpha * Nh.x, alpha * Nh.y, max(0, Nh.z)));
+}
+
+float eval_vndf_pdf(float NdotH, float NdotV, float roughness) {
+  if (NdotV <= 0 || NdotH <= 0) return 0;
+  float G1V = G1_Smith(NdotV, roughness);
+  return D_GGX(NdotH, roughness) * G1V / max(4 * NdotV, EPS_PDF);
+}
+
+vec3 sampleCosineHemisphere(vec3 N) {
+  float u1 = random();
+  float u2 = random();
+
+  float r = sqrt(u1);
+  float phi = 2.0 * PI * u2;
+
+  float x = r * cos(phi);
+  float y = r * sin(phi);
+  float z = sqrt(max(0.0, 1.0 - u1));
+
+  vec3 T = makeTangent(N);
+  vec3 B = cross(N, T);
+
+  return normalize(x * T + y * B + z * N);
+}
+
+//================================================//
+//          MULTIPLE IMPORTANCE SAMPLING          //
+//================================================//
+
+float power_heuristic(float pdf_a, float pdf_b) {
+  float a2 = pdf_a * pdf_a;
+  float b2 = pdf_b * pdf_b;
+  float sum = a2 + b2;
+  if (sum <= 0.0) return 0.0;
+
+  return a2 / (sum);
+}
+
+float light_pdf(ray r, sphere light) {
+  hit_record rec;
+  if (!hit_sphere(r, light, vec2(EPS_RAY, 10000), rec)) return 0;
+
+  float cos_light = dot(-r.direction, rec.normal);
+  if (cos_light <= 0.0) return 0;
+
+  float distance_sq = rec.t * rec.t;
+  float area = 4 * PI * light.radius * light.radius;
+
+  return distance_sq / max(area * cos_light, EPS_PDF);
+}
+
+float luminance(vec3 c) {
+  return dot(c, vec3(0.2126, 0.7152, 0.0722));
+}
+
+float specularChoiceProbability(vec3 albedo, float metallic) {
+  vec3 F0 = mix(vec3(0.04), albedo, metallic);
+
+  float specW = max(luminance(F0), 1e-4);
+  float diffW = luminance(albedo) * (1.0 - metallic);
+
+  if (diffW <= 1e-6) return 1.0; // pure metal
+  if (specW <= 1e-6) return 0.0;
+
+  return clamp(specW / (specW + diffW), 0.05, 0.95);
+}
+
+//=========================================//
+//          RAY BOUNCING FUNCTION          //
+//=========================================//
 
 vec3 ray_color(ray r) {
   vec3 color = vec3(1.0);
   vec3 incoming_light = vec3(0);
   int MAX_BOUNCES = 5;
+
+  float prev_mis_weight = 1.0;
+
   for (int i = 0; i < MAX_BOUNCES; i++) {
     hit_record rec;
-    if (hit_world(r, vec2(0.001, 10000), rec)) {
-      //---------Lambertian material---------//
-      if (rec.material.ID == 0) {
+    if (hit_world(r, vec2(EPS_RAY, 10000), rec)) {
+      if (rec.material.emission.w > 0.0) {
+        incoming_light += rec.material.emission.rgb * rec.material.emission.w * prev_mis_weight * color;
+        break;
+      }
+
+      //===========Lambertian material==========//
+      if (rec.material.ID == Lambertian) {
         if (dot(r.direction, rec.normal) > 0)
           break;
 
-        if (random() < rec.material.reflection_chance) {
-          vec3 reflected = reflect(r.direction, rec.normal);
-          r = ray(rec.p, reflected);
-          incoming_light += rec.material.emission.xyz * rec.material.emission.w * color;
+        vec3 V = normalize(-r.direction);
+        vec3 N = rec.normal;
+
+        if (rec.material.metallic > 0.999 && rec.material.roughness <= 0) {
+          vec3 L = reflect(r.direction, N);
+
           color *= rec.material.albedo;
+          r = ray(rec.p + N * EPS_RAY, L);
+          prev_mis_weight = 1.0;
           continue;
         }
 
+        float roughness = max(rec.material.roughness, MIN_ROUGHNESS);
+        float NdotV = dot(N, V);
+
+        vec3 T = makeTangent(N);
+        vec3 B = cross(N, T);
+        vec3 V_local = vec3(dot(V, T), dot(V, B), NdotV);
+
+        float p_spec = specularChoiceProbability(rec.material.albedo, rec.material.metallic);
+        float p_diff = 1.0 - p_spec;
+
         sphere light = spheres[0];
+
+        //----------Light sampling(NEE)----------//
         vec3 light_point = light.center + random_on_unit_sphere() * light.radius;
         vec3 to_light = light_point - rec.p;
-        float to_light_len_sq = to_light.x * to_light.x + to_light.y * to_light.y + to_light.z * to_light.z;
-        ray shadow_ray = ray(rec.p, normalize(to_light));
+        float dist2 = dot(to_light, to_light);
+        vec3 L = to_light * inversesqrt(dist2);
 
-        if (!shadow_hit_world(shadow_ray, vec2(0.001, length(light.center - rec.p) - light.radius - 0.001))) {
-          float NdotL = max(dot(rec.normal, shadow_ray.direction), 0.0);
-          float G = abs(dot(-to_light, (light_point - light.center) / light.radius)) / to_light_len_sq;
-          incoming_light += light.mat.emission.rgb * light.mat.emission.w * rec.material.albedo * NdotL * color * G;
+        vec3 light_normal = normalize(light_point - light.center);
+        float cos_light = dot(-L, light_normal);
+        if (cos_light > 0.0) {
+          float light_area = 4 * PI * light.radius * light.radius;
+          float pdf_light = dist2 / max(light_area * cos_light, EPS_PDF);
+
+          float NdotL = max(dot(N, L), 0.0);
+          if (NdotL > 0) {
+            ray shadow_ray = ray(rec.p + N * EPS_RAY, L);
+            if (!shadow_hit_world(shadow_ray, vec2(0, length(to_light) - EPS_RAY), 0)) {
+              float pdf_spec_nee = 0.0;
+              vec3 H;
+              if (makeHalfVector(V, L, H)) {
+                float NdotH = max(dot(N, H), 0.0);
+                pdf_spec_nee = eval_vndf_pdf(NdotH, NdotV, roughness);
+              }
+
+              float pdf_diff_nee = NdotL / PI;
+              float pdf_brdf_nee = p_spec * pdf_spec_nee + p_diff * pdf_diff_nee;
+
+              vec3 brdf_nee = BRDF(V, L, N, rec.material.albedo, rec.material.metallic, roughness);
+
+              float mis_w = power_heuristic(pdf_light, pdf_brdf_nee);
+              incoming_light += light.mat.emission.rgb * light.mat.emission.w * NdotL * color * brdf_nee * mis_w / pdf_light;
+            }
+          }
         }
-        vec3 scatter_direction = 1.001 * rec.normal + random_on_unit_sphere();
 
-        r = ray(rec.p, normalize(scatter_direction));
+        //----------Material sampling(BRDF)----------//
+
+        vec3 scatter_direction;
+        float pdf_path = 0;
+
+        if (random() < p_spec) {
+          //----------Specular----------//
+          vec3 H_local = sampleVNDF_local(V_local, roughness);
+          vec3 H = H_local.x * T + H_local.y * B + H_local.z * N;
+          scatter_direction = reflect(-V, H);
+          if (dot(scatter_direction, N) <= 0) break;
+
+          float NdotH = max(dot(N, H), 0);
+
+          float NdotL = max(dot(N, scatter_direction), 0);
+          pdf_path = p_spec * eval_vndf_pdf(NdotH, NdotV, roughness) + p_diff * (NdotL / PI);
+        } else {
+          //----------Diffuse----------//
+          scatter_direction = sampleCosineHemisphere(N);
+
+          vec3 H;
+          if (makeHalfVector(V, scatter_direction, H)) {
+            float NdotH = max(dot(N, H), 0.0);
+            float NdotL = max(dot(N, scatter_direction), 0);
+
+            pdf_path = max(p_spec * eval_vndf_pdf(NdotH, NdotV, roughness), EPS_PDF) + p_diff * (max(NdotL, 0) / PI);
+          }
+        }
+
+        float NdotL_path = max(dot(N, scatter_direction), 0.0);
+        float pdf_light_for_brdf = light_pdf(ray(rec.p, scatter_direction), light);
+
+        prev_mis_weight = power_heuristic(pdf_path, pdf_light_for_brdf);
+
+        vec3 brdf_path = BRDF(V, scatter_direction, N, rec.material.albedo, rec.material.metallic, roughness);
+        color *= brdf_path * NdotL_path / max(pdf_path, 0.00001);
+        r = ray(rec.p + N * EPS_RAY, scatter_direction);
       }
-      //----------Metal---------//
-      else if (rec.material.ID == 1) {
-        vec3 reflected = reflect(r.direction, rec.normal);
-        r = ray(rec.p, reflected);
-      }
-      //-----------Glass----------//
-      else if (rec.material.ID == 2) {
+      //============Glass===========//
+      else if (rec.material.ID == Glass) {
         if (MAX_BOUNCES < 10) MAX_BOUNCES++;
 
         float n = rec.material.refractive_index;
@@ -480,21 +787,23 @@ vec3 ray_color(ray r) {
             r = ray(rec.p, refracted);
           }
         }
+        prev_mis_weight = 1.0;
+        color *= rec.material.albedo;
       }
-      //----------General----------//
-      incoming_light += rec.material.emission.xyz * rec.material.emission.w * color;
-      color *= rec.material.albedo;
     }
     else {
-      float a = 0.5 * (r.direction.y + 1.0);
-      incoming_light += 0.5 * color * ((1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0));
+      float a = 0.9 * (r.direction.y + 1.0);
+      vec3 skyColor = (1.0 - a) * vec3(1.0, 1.0, 1.0) + a * vec3(0.5, 0.7, 1.0);
+      incoming_light += skyColor * color * prev_mis_weight;
       break;
     }
   }
   return incoming_light;
 }
 
-//==========MAIN FUNCTION==========//
+//=================================//
+//          MAIN FUNCTION          //
+//=================================//
 
 void main()
 {

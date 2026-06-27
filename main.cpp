@@ -3,6 +3,7 @@
 #include "models/models.h"
 #include "movement/movement.h"
 #include <SFML/System/Clock.hpp>
+#include <random>
 
 int main() {
   if (initialize() != 0)
@@ -11,6 +12,9 @@ int main() {
     return -1;
 
   sf::Clock _clock;
+
+  int fps_arr[16];
+  std::fill(std::begin(fps_arr), std::end(fps_arr), 0);
 
   while (window.isOpen()) {
     getEvent(window);
@@ -23,7 +27,12 @@ int main() {
     }
 
     render();
+    fps_arr[frameCount % 16] = 1 / dt;
+    float fps = 0;
+    for (int i = 0; i < 16; i++)
+      fps += fps_arr[i];
+    fps /= 16;
 
-    std::cout << frameCount << "\t" << 1 / dt << std::endl;
+    std::cout << frameCount << "\t" << fps << std::endl;
   }
 }

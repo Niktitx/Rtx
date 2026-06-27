@@ -8,6 +8,7 @@ inline GLuint emptyVAO;
 
 inline uint modelTexture;
 inline uint imageTexture;
+inline uint normalTexture;
 
 inline GLuint accumTextures[2];
 inline GLuint fbos[2];
