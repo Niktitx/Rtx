@@ -30,8 +30,25 @@ The renderer supports Monte Carlo path tracing with physically based materials, 
 
 ---
 
-# Metallic and lambertian materials
+# Galery
+Metallic and lambertian material is frels
 ![](images/metals.png)
+
+
+Mirror room 
+![](images/mirror.png)
+
+
+Metal floor
+![](images/metal_floor.png)
+
+In void
+![](images/void.png)
+
+
+Night sky
+![](images/night.png)
+
 
 ---
 
@@ -42,8 +59,7 @@ Requirements:
 - C++17
 - OpenGL 3.3+
 - CMake
-- GLFW
-- GLAD
+- SFML
 
 Clone the repository
 
@@ -79,23 +95,6 @@ Run
 - Schlick Fresnel approximation
 - Cosine-weighted hemisphere sampling
 - Visible Normal Distribution Function (VNDF) sampling
-- Russian roulette termination (planned)
-
----
-
-## Project structure
-
-```
-src/
-    Renderer/
-    Scene/
-    BVH/
-    ModelLoader/
-    Shaders/
-assets/
-models/
-textures/
-```
 
 
 ---

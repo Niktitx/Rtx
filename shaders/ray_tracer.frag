@@ -121,17 +121,18 @@ const vec3 white = vec3(1);
 const vec3 red = vec3(0.8, 0.1, 0.1);
 const vec3 green = vec3(0.1, 0.8, 0.1);
 const vec3 blue = vec3(0.1, 0.1, 0.8);
+const vec3 yellow = vec3(0.8, 0.8, 0.1);
 
 #define Lambertian 0
 #define Glass 1
 
-const sphere spheres[6] = sphere[](
+const sphere spheres[5] = sphere[](
     sphere(vec3(0.0, 2.0, 0.0), 0.5, material(Lambertian, 0, white, 0, 1.0, vec4(1, 1, 1, 10), 1)),
-    sphere(vec3(1.5, 0.0, 0), 0.5, material(Lambertian, 0, red, 0, 1.0, vec4(0), 1)),
+    sphere(vec3(2, 0.0, 0.0), 0.5, material(Lambertian, 0, vec3(0.8, 0.1, 0.8), 0, 1.0, vec4(0), 1)),
     sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(Glass, 0, white, 0, 1.0, vec4(0), 1.5)),
-    sphere(vec3(1.0, 0.0, -1.0), 0.5, material(Lambertian, 0, green, 1, 0.5, vec4(0), 1)),
-    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, blue, 0, 0, vec4(0.0), 1)),
-    sphere(vec3(-1.5, 0.0, -0.25), 0.3, material(Lambertian, 1, white, 0, 0, vec4(0.0), 1))
+    sphere(vec3(1.0, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 1, 0.4, vec4(0), 1)),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, red, 0, 0, vec4(0.0), 1))
+  //sphere(vec3(0.0, 0.0, 0.0), 100, material(Lambertian, 1, white, 0, 0, vec4(0.0), 1))
 
   // sphere(vec3(-2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 1, 1, vec4(0.0), 1)),
   // sphere(vec3(-1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.75, 1, vec4(0.0), 1)),
@@ -164,13 +165,13 @@ const sphere spheres[6] = sphere[](
   // sphere(vec3(2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0, 0, vec4(0.0), 1))
   );
 
-const plane cornellBox[6] = plane[](
-    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(Lambertian, 0, white, 0, 0, vec4(0), 1)),
-    plane(vec3(0, 2, 0), vec3(0, -1, 0), material(Lambertian, 0, white, 0, 1.0, vec4(0), 1)),
-    plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(Lambertian, 0, green, 0, 1.0, vec4(0), 1)),
-    plane(vec3(2.5, 0, 0), vec3(-1, 0, 0), material(Lambertian, 0, red, 0, 1.0, vec4(0), 1)),
-    plane(vec3(0, 0, -3), vec3(0, 0, 1), material(Lambertian, 0, blue, 0, 1.0, vec4(0), 1)),
-    plane(vec3(0, 0, 1), vec3(0, 0, -1), material(Lambertian, 0, white, 0, 1, vec4(0), 1))
+const plane cornellBox[1] = plane[](
+    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(Lambertian, 0, white, 0, 0.3, vec4(0), 1))
+  // plane(vec3(0, 2, 0), vec3(0, -1, 0), material(Lambertian, 0, white, 1, 0.3, vec4(0), 1)),
+  // plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(Lambertian, 0, green, 1, 0, vec4(0), 1)),
+  // plane(vec3(2.5, 0, 0), vec3(-1, 0, 0), material(Lambertian, 0, red, 1, 0, vec4(0), 1)),
+  // plane(vec3(0, 0, -3), vec3(0, 0, 1), material(Lambertian, 0, blue, 1, 0, vec4(0), 1)),
+  // plane(vec3(0, 0, 1), vec3(0, 0, -1), material(Lambertian, 0, white, 1, 0, vec4(0), 1))
   );
 
 //=====================================//
@@ -352,7 +353,7 @@ bool hit_plane(ray r, plane p, vec2 ray_t, out hit_record rec) {
   float checker = mod(floor(rec.p.x * 10.0) + floor(rec.p.z * 10.0), 2.0);
 
   if (checker == 0.0 && p.mat.albedo == vec3(1.0) && rec.normal == vec3(0.0, 1.0, 0.0)) {
-    rec.material.albedo = vec3(0.5);
+    //rec.material.albedo = vec3(0.5);
   }
 
   return true;
@@ -834,4 +835,4 @@ void main()
 
   vec3 finalColor = (prevColor * float(u_frame) + pixel_color) / float(u_frame + 1);
   FragColor = vec4((finalColor), 1.0);
-}
+} //
