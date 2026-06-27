@@ -38,13 +38,17 @@ Metallic and lambertian material is frels
 Mirror room 
 ![](images/mirror.png)
 
+---
 
 Metal floor
 ![](images/metal_floor.png)
 
+---
+
 In void
 ![](images/void.png)
 
+---
 
 Night sky
 ![](images/night.png)
