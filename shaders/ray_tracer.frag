@@ -125,51 +125,52 @@ const vec3 blue = vec3(0.1, 0.1, 0.8);
 #define Lambertian 0
 #define Glass 1
 
-const sphere spheres[26] = sphere[](
-    sphere(vec3(0, 3, 0), 0.5, material(Lambertian, 0, white, 0, 1.0, vec4(1, 1, 1, 10), 1)),
-    // sphere(vec3(1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, red, 0.4, 1.0, vec4(0), 1)),
-    //sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(Glass, 0, white, 0, 1.0, vec4(0), 1.5)),
-    // sphere(vec3(1, 0.0, -1.0), 0.5, material(Lambertian, 0, green, 0, 1, vec4(0), 1)),
-    // sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, blue, 0.9, 1, vec4(0.0), 1))
+const sphere spheres[6] = sphere[](
+    sphere(vec3(0.0, 2.0, 0.0), 0.5, material(Lambertian, 0, white, 0, 1.0, vec4(1, 1, 1, 10), 1)),
+    sphere(vec3(1.5, 0.0, 0), 0.5, material(Lambertian, 0, red, 0, 1.0, vec4(0), 1)),
+    sphere(vec3(-0.5, 0.0, -1.0), 0.5, material(Glass, 0, white, 0, 1.0, vec4(0), 1.5)),
+    sphere(vec3(1.0, 0.0, -1.0), 0.5, material(Lambertian, 0, green, 1, 0.5, vec4(0), 1)),
+    sphere(vec3(-1.5, 0.0, -2.0), 0.5, material(Lambertian, 0, blue, 0, 0, vec4(0.0), 1)),
+    sphere(vec3(-1.5, 0.0, -0.25), 0.3, material(Lambertian, 1, white, 0, 0, vec4(0.0), 1))
 
-    sphere(vec3(-2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 1, 1, vec4(0.0), 1)),
-    sphere(vec3(-1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.75, 1, vec4(0.0), 1)),
-    sphere(vec3(0, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.5, 1, vec4(0.0), 1)),
-    sphere(vec3(1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.25, 1, vec4(0.0), 1)),
-    sphere(vec3(2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0, 1, vec4(0.0), 1)),
-
-    sphere(vec3(-2, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 1, 0.75, vec4(0.0), 1)),
-    sphere(vec3(-1, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.75, 0.75, vec4(0.0), 1)),
-    sphere(vec3(0, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.5, 0.75, vec4(0.0), 1)),
-    sphere(vec3(1, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.25, 0.75, vec4(0.0), 1)),
-    sphere(vec3(2, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0, 0.75, vec4(0.0), 1)),
-
-    sphere(vec3(-2, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 1, 0.5, vec4(0.0), 1)),
-    sphere(vec3(-1, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.75, 0.5, vec4(0.0), 1)),
-    sphere(vec3(0, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.5, 0.5, vec4(0.0), 1)),
-    sphere(vec3(1, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.25, 0.5, vec4(0.0), 1)),
-    sphere(vec3(2, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0, 0.5, vec4(0.0), 1)),
-
-    sphere(vec3(-2, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 1, 0.25, vec4(0.0), 1)),
-    sphere(vec3(-1, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.75, 0.25, vec4(0.0), 1)),
-    sphere(vec3(0, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.5, 0.25, vec4(0.0), 1)),
-    sphere(vec3(1, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.25, 0.25, vec4(0.0), 1)),
-    sphere(vec3(2, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0, 0.25, vec4(0.0), 1)),
-
-    sphere(vec3(-2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 1, 0, vec4(0.0), 1)),
-    sphere(vec3(-1, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.75, 0, vec4(0.0), 1)),
-    sphere(vec3(0, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.5, 0, vec4(0.0), 1)),
-    sphere(vec3(1, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.25, 0, vec4(0.0), 1)),
-    sphere(vec3(2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0, 0, vec4(0.0), 1))
+  // sphere(vec3(-2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 1, 1, vec4(0.0), 1)),
+  // sphere(vec3(-1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.75, 1, vec4(0.0), 1)),
+  // sphere(vec3(0, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.5, 1, vec4(0.0), 1)),
+  // sphere(vec3(1, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0.25, 1, vec4(0.0), 1)),
+  // sphere(vec3(2, 0.0, -2.0), 0.5, material(Lambertian, 0, white, 0, 1, vec4(0.0), 1)),
+  //
+  // sphere(vec3(-2, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 1, 0.75, vec4(0.0), 1)),
+  // sphere(vec3(-1, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.75, 0.75, vec4(0.0), 1)),
+  // sphere(vec3(0, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.5, 0.75, vec4(0.0), 1)),
+  // sphere(vec3(1, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0.25, 0.75, vec4(0.0), 1)),
+  // sphere(vec3(2, 0.0, -1.0), 0.5, material(Lambertian, 0, white, 0, 0.75, vec4(0.0), 1)),
+  //
+  // sphere(vec3(-2, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 1, 0.5, vec4(0.0), 1)),
+  // sphere(vec3(-1, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.75, 0.5, vec4(0.0), 1)),
+  // sphere(vec3(0, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.5, 0.5, vec4(0.0), 1)),
+  // sphere(vec3(1, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0.25, 0.5, vec4(0.0), 1)),
+  // sphere(vec3(2, 0.0, 0.0), 0.5, material(Lambertian, 0, white, 0, 0.5, vec4(0.0), 1)),
+  //
+  // sphere(vec3(-2, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 1, 0.25, vec4(0.0), 1)),
+  // sphere(vec3(-1, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.75, 0.25, vec4(0.0), 1)),
+  // sphere(vec3(0, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.5, 0.25, vec4(0.0), 1)),
+  // sphere(vec3(1, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0.25, 0.25, vec4(0.0), 1)),
+  // sphere(vec3(2, 0.0, 1.0), 0.5, material(Lambertian, 0, white, 0, 0.25, vec4(0.0), 1)),
+  //
+  // sphere(vec3(-2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 1, 0, vec4(0.0), 1)),
+  // sphere(vec3(-1, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.75, 0, vec4(0.0), 1)),
+  // sphere(vec3(0, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.5, 0, vec4(0.0), 1)),
+  // sphere(vec3(1, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0.25, 0, vec4(0.0), 1)),
+  // sphere(vec3(2, 0.0, 2.0), 0.5, material(Lambertian, 0, white, 0, 0, vec4(0.0), 1))
   );
 
-const plane cornellBox[1] = plane[](
-    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(Lambertian, 0, white, 0, 1.0, vec4(0), 1))
-  // plane(vec3(0, 3, 0), vec3(0, -1, 0), material(Lambertian, 0, white, 0, 1.0, vec4(0), 1)),
-  // plane(vec3(-3.5, 0, 0), vec3(1, 0, 0), material(Lambertian, 0, green, 0, 1.0, vec4(0), 1)),
-  // plane(vec3(3.5, 0, 0), vec3(-1, 0, 0), material(Lambertian, 0, red, 0, 1.0, vec4(0), 1)),
-  // plane(vec3(0, 0, -4), vec3(0, 0, 1), material(Lambertian, 0, blue, 0, 1.0, vec4(0), 1)),
-  // plane(vec3(0, 0, 3), vec3(0, 0, -1), material(Lambertian, 0, white, 0, 1, vec4(0), 1))
+const plane cornellBox[6] = plane[](
+    plane(vec3(0, -0.5, 0), vec3(0, 1, 0), material(Lambertian, 0, white, 0, 0, vec4(0), 1)),
+    plane(vec3(0, 2, 0), vec3(0, -1, 0), material(Lambertian, 0, white, 0, 1.0, vec4(0), 1)),
+    plane(vec3(-2.5, 0, 0), vec3(1, 0, 0), material(Lambertian, 0, green, 0, 1.0, vec4(0), 1)),
+    plane(vec3(2.5, 0, 0), vec3(-1, 0, 0), material(Lambertian, 0, red, 0, 1.0, vec4(0), 1)),
+    plane(vec3(0, 0, -3), vec3(0, 0, 1), material(Lambertian, 0, blue, 0, 1.0, vec4(0), 1)),
+    plane(vec3(0, 0, 1), vec3(0, 0, -1), material(Lambertian, 0, white, 0, 1, vec4(0), 1))
   );
 
 //=====================================//
