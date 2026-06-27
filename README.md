@@ -26,6 +26,7 @@ The renderer supports Monte Carlo path tracing with physically based materials, 
 - OBJ model loading
 - Texture mapping
 - Normal mapping
+- Glass rendering
 
 ---
 
