@@ -30,7 +30,7 @@ The renderer supports Monte Carlo path tracing with physically based materials, 
 
 ---
 
-#Metallic and lambertian materials
+# Metallic and lambertian materials
 ![](images/metals.png)
 
 ---
