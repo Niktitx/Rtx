@@ -30,11 +30,8 @@ The renderer supports Monte Carlo path tracing with physically based materials, 
 
 ---
 
-## Gallery
-
-| Cornell-like scene | Metallic materials |
-|--------------------|--------------------|
-| ![](images/cornell.png) | ![](images/metals.png) |
+#Metallic and lambertian materials
+![](images/metals.png)
 
 ---
 
